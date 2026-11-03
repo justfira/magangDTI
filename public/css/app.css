@@ -1,0 +1,58 @@
+:root { --utama:#0b5ed7; --utama-tua:#0a3f8f; --latar:#f4f6fa; --teks:#1f2937; --redup:#6b7280; --garis:#e5e7eb; --sukses:#15803d; --gagal:#b91c1c; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background:var(--latar); color:var(--teks); }
+a { color: var(--utama); }
+.topbar { display:flex; align-items:center; gap:16px; padding:10px 20px; background:#fff; border-bottom:1px solid var(--garis); position:sticky; top:0; z-index:5; }
+.brand { font-size:20px; text-decoration:none; color:var(--utama-tua); }
+.topbar-kanan { margin-left:auto; display:flex; align-items:center; gap:14px; }
+.topbar-kanan form { margin:0; }
+.lonceng { position:relative; text-decoration:none; font-size:20px; }
+.badge { position:absolute; top:-6px; right:-10px; background:var(--gagal); color:#fff; border-radius:10px; font-size:11px; padding:1px 6px; }
+.nama small { color:var(--redup); }
+.burger { display:none; border:0; background:none; font-size:22px; }
+.wadah { display:flex; min-height:calc(100vh - 57px); }
+.sidebar { width:230px; background:#fff; border-right:1px solid var(--garis); padding:14px 10px; flex-shrink:0; }
+.sidebar a { display:block; padding:9px 12px; border-radius:8px; color:var(--teks); text-decoration:none; margin-bottom:2px; }
+.sidebar a:hover { background:var(--latar); }
+.sidebar a.aktif { background:#e7f0ff; color:var(--utama-tua); font-weight:600; }
+.konten { flex:1; padding:24px; max-width:1200px; }
+.guest-konten { margin:0 auto; max-width:900px; }
+h1 { font-size:24px; margin:0 0 16px; }
+.kartu { background:#fff; border:1px solid var(--garis); border-radius:12px; padding:18px 20px; margin-bottom:16px; }
+.grid-kartu { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:16px; }
+.angka .nilai { font-size:30px; font-weight:700; color:var(--utama-tua); }
+.angka .label { color:var(--redup); }
+.redup { color:var(--redup); }
+.status { display:inline-block; padding:2px 10px; border-radius:20px; background:#e7f0ff; color:var(--utama-tua); font-size:13px; }
+.btn { display:inline-block; background:var(--utama); color:#fff; border:0; border-radius:8px; padding:9px 16px; cursor:pointer; text-decoration:none; font-size:14px; }
+.btn-garis { background:#fff; color:var(--utama); border:1px solid var(--utama); padding:6px 12px; }
+.alert { padding:10px 14px; border-radius:8px; margin-bottom:14px; }
+.alert ul { margin:0; padding-left:18px; }
+.alert-sukses { background:#dcfce7; color:var(--sukses); }
+.alert-info { background:#e0f2fe; color:#075985; }
+.alert-gagal { background:#fee2e2; color:var(--gagal); }
+table { width:100%; border-collapse:collapse; }
+th, td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--garis); }
+th { font-size:13px; color:var(--redup); }
+.form label { display:block; margin-bottom:12px; font-weight:600; }
+input, select, textarea { width:100%; padding:9px 10px; border:1px solid #cbd5e1; border-radius:8px; font:inherit; margin-top:4px; font-weight:normal; }
+.dua-kolom { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.aksi { display:flex; justify-content:flex-end; gap:12px; align-items:center; }
+.judul-aksi { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.judul-aksi h1 { margin:0; }
+.login { max-width:420px; margin:40px auto; }
+.login label { display:block; margin-bottom:12px; font-weight:600; }
+.login .btn { width:100%; }
+.notif { display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid var(--garis); }
+.notif.baru b { color:var(--utama-tua); }
+.rancangan ol li { margin-bottom:6px; }
+code { background:var(--latar); padding:2px 6px; border-radius:4px; }
+nav[role=navigation] { margin-top:12px; }
+@media (max-width: 800px) {
+  .burger { display:block; }
+  .sidebar { display:none; position:fixed; top:57px; bottom:0; left:0; z-index:4; }
+  body.menu-buka .sidebar { display:block; }
+  .konten { padding:16px; }
+  .nama { display:none; }
+  .dua-kolom { grid-template-columns:1fr; }
+}
