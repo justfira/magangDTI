@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends(auth()->check() ? 'layouts.app' : 'layouts.guest')
 @section('judul', $judul)
 @section('konten')
 <h1>{{ $judul }}</h1>

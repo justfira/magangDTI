@@ -1,0 +1,322 @@
+/* ==========================================================================
+   landing.css — Landing page publik Magang DTI ("Satu Benang × Editorial")
+   Dimuat HANYA oleh resources/views/publik/program.blade.php via @stack('css').
+   Semua kelas ber-awalan `publik-` dan dibungkus `.publik` — tidak mungkin
+   bertabrakan dengan app.css. Token warna/font dipakai ulang dari app.css.
+   ========================================================================== */
+
+/* ---------- 0. Pembuka full-bleed (opt-in via body class) ---------- */
+.guest-lp .guest-konten { max-width: none; padding: 0; margin: 0; }
+.guest-lp .kolom-utama { margin-left: 0; }
+
+/* ---------- 1. Variabel lokal landing ---------- */
+.publik {
+  --publik-gelap-2: #0a4327;          /* ramp di atas --samping, untuk kedalaman panel gelap */
+  --publik-putih-redup: rgba(255, 255, 255, .78);
+  --publik-garis-putih: rgba(255, 255, 255, .18);
+  --publik-mono: ui-monospace, "Cascadia Code", Consolas, "SF Mono", monospace;
+  --publik-benang-x: clamp(20px, 3vw, 50px);   /* posisi x benang di tepi kiri viewport */
+
+  background: var(--floral);
+  color: var(--teks);
+  overflow-x: clip;                    /* jaga motif dekoratif tak pernah bikin scroll horizontal */
+}
+
+/* ---------- 2. Kerangka section ---------- */
+.publik-bagian { position: relative; padding: clamp(56px, 9vw, 96px) 0; scroll-margin-top: 64px; }   /* kompensasi topbar sticky saat lompat anchor */
+.publik-bagian--terang { background: var(--floral); }
+.publik-bagian--gelap {
+  background: radial-gradient(120% 100% at 50% 0%, var(--publik-gelap-2) 0%, var(--samping) 62%);
+  color: var(--publik-putih-redup);
+}
+.publik-bagian--gelap h2, .publik-bagian--gelap h3 { color: #fff; }
+.publik-bagian--gelap p { color: var(--publik-putih-redup); }
+
+.publik-wadah { max-width: 1120px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 44px); }
+
+.publik-h2 {
+  font-family: var(--display); font-weight: 600;
+  font-size: clamp(28px, 3.6vw, 44px); line-height: 1.12; letter-spacing: -.015em;
+  margin: 0 0 14px; color: var(--olive);
+}
+.publik-bagian--gelap .publik-h2 { color: #fff; }
+.publik-aksen { font-style: italic; color: inherit; }
+.publik-bagian--gelap .publik-aksen { color: var(--kuning); }
+
+/* ---------- 3. Hero (gelap) ---------- */
+.publik-hero { padding-top: clamp(48px, 7vw, 84px); }
+.publik-hero-grid {
+  display: flex; flex-direction: column; justify-content: center;
+  min-height: clamp(360px, 46vh, 540px);
+}
+.publik-hero-teks { max-width: 700px; }
+.publik-kicker {
+  font-family: var(--publik-mono); font-size: 12px; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--kuning); margin: 0 0 16px;
+}
+.publik-judul {
+  font-family: var(--display); font-weight: 600;
+  font-size: clamp(38px, 4.6vw, 66px); line-height: 1.06; letter-spacing: -.02em;
+  color: #fff; margin: 14px 0 22px;
+  text-wrap: balance;   /* hindari kata yatim di baris terakhir */
+}
+.publik-judul .publik-aksen {
+  font-style: italic;
+  text-decoration: underline; text-decoration-color: var(--kuning);
+  text-decoration-thickness: 3px; text-underline-offset: 7px;
+}
+.publik-lead { font-size: 16.5px; line-height: 1.65; max-width: 54ch; margin: 0 0 26px; }
+.publik-aksi { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.publik-tautan-tenang {
+  color: var(--publik-putih-redup); font-size: 14.5px; font-weight: 600;
+  text-decoration: underline; text-underline-offset: 4px; text-decoration-color: rgba(255, 255, 255, .35);
+}
+.publik-tautan-tenang:hover { color: #fff; text-decoration-color: var(--kuning); }
+
+/* Baris mikro bergaya kode + kursor blok (animasi Tier 1, dimatikan saat reduce-motion) */
+.publik-mono-baris {
+  font-family: var(--publik-mono); font-size: 13px;
+  color: rgba(255, 255, 255, .62); margin: 30px 0 0;
+}
+.publik-kursor {
+  display: inline-block; width: .55em; height: 1.05em;
+  background: var(--kuning); margin-left: 5px; vertical-align: -.18em;
+}
+
+/* Teks mono di dalam motif SVG (dipakai motif bidang Programming) */
+.publik-mono-teks {
+  font-family: var(--publik-mono); font-size: 20px; letter-spacing: 1px;
+  fill: var(--kuning); opacity: .8;
+}
+.publik-meta-baris {
+  display: grid; grid-template-columns: 118px 1fr; gap: 14px; align-items: baseline;
+  padding: 13px 0; border-bottom: 1px solid var(--publik-garis-putih);
+}
+.publik-meta-label {
+  font-family: var(--publik-mono); font-size: 11px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase; color: rgba(255, 255, 255, .55);
+}
+.publik-meta-nilai { color: #fff; font-size: 14.5px; line-height: 1.5; }
+
+/* ---------- 4. Section program dibuka (terang) ---------- */
+.publik-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 20px; }
+.publik-kartu {
+  background: #fff; border: 1px solid var(--garis); border-radius: var(--radius);
+  box-shadow: var(--bayangan); padding: 28px 30px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.publik-kartu h3 {
+  font-family: var(--display); font-weight: 600; font-size: 22px;
+  letter-spacing: -.01em; margin: 0; color: var(--olive);
+}
+.publik-kartu-waktu { font-size: 14px; color: var(--redup); margin: 0; }
+.publik-kartu-waktu b { color: var(--olive); font-weight: 600; }
+.publik-kartu-info { font-size: 15px; line-height: 1.6; margin: 0; }
+
+.publik-syarat { margin-top: auto; }
+.publik-syarat summary {
+  display: inline-flex; align-items: center; min-height: 44px;
+  padding: 8px 15px; border: 1.5px solid var(--utama); border-radius: 10px;
+  color: var(--utama-tua); font-weight: 600; font-size: 14px; cursor: pointer;
+  list-style: none; user-select: none; transition: background .15s;
+}
+.publik-syarat summary::-webkit-details-marker { display: none; }
+.publik-syarat summary::before { content: "+"; margin-right: 8px; font-family: var(--publik-mono); }
+.publik-syarat[open] summary::before { content: "−"; }
+.publik-syarat summary:hover { background: #eef7f0; }
+.publik-syarat-isi { padding: 14px 4px 0; }
+.publik-syarat-isi ul { margin: 0 0 10px; padding-left: 20px; }
+.publik-syarat-isi li { margin-bottom: 5px; font-size: 14.5px; }
+.publik-catatan {
+  font-size: 13px; color: var(--redup); border-left: 2.5px solid var(--garis-kuat);
+  padding-left: 10px; margin: 0;
+}
+
+/* Empty state (0 program) */
+.publik-kosong {
+  background: #fff; border: 1px dashed var(--garis-kuat); border-radius: var(--radius);
+  padding: 44px 30px; text-align: center; color: var(--redup);
+}
+.publik-kosong .ikon-besar { width: 40px; height: 40px; display: block; margin: 0 auto 12px; color: var(--peru); }
+.publik-kosong b { display: block; color: var(--olive); font-size: 16px; margin-bottom: 4px; }
+
+/* ---------- 5. Section tiga bidang (gelap, rail + node) ---------- */
+.publik-pernyataan {
+  font-family: var(--display); font-weight: 600;
+  font-size: clamp(30px, 4vw, 46px); line-height: 1.14; letter-spacing: -.015em;
+  max-width: 640px; margin: 0;
+}
+.publik-stasiun { list-style: none; margin: 40px 0 0; padding: 0; position: relative; }
+.publik-stasiun::before {
+  content: ""; position: absolute; left: 11px; top: 10px; bottom: 14px;
+  width: 1.5px; background: rgba(237, 209, 48, .4);   /* benang kuning menyambung tiga node */
+}
+.publik-stasiun li {
+  position: relative; padding: 0 0 30px 46px;
+  display: flex; align-items: center; gap: clamp(16px, 3vw, 40px);
+}
+.publik-stasiun li:last-child { padding-bottom: 0; }
+.publik-stasiun-teks { max-width: 560px; }
+.publik-node {
+  position: absolute; left: 3px; top: 3px; width: 17px; height: 17px;
+  border-radius: 50%; background: var(--samping); border: 2.5px solid var(--kuning);
+}
+.publik-stasiun-no {
+  font-family: var(--publik-mono); font-size: 11.5px; font-weight: 600;
+  letter-spacing: .12em; color: rgba(255, 255, 255, .45); display: block; margin-bottom: 4px;
+}
+.publik-stasiun h3 { font-size: 20px; margin: 0 0 6px; }
+.publik-stasiun p { margin: 0; font-size: 15px; line-height: 1.6; }
+
+/* ---------- 6. Section alur magang (terang, dua pintu menyatu) ---------- */
+.publik-pintu { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
+.publik-jalur {
+  position: relative;
+  background: #fff; border: 1px solid var(--garis-kuat); border-radius: var(--radius);
+  padding: 20px 22px;
+}
+.publik-jalur::before {
+  content: ""; position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%);
+  width: 12px; height: 12px; border-radius: 50%;
+  background: var(--floral); border: 2.5px solid var(--kuning);
+}
+.publik-jalur h3 { font-size: 15.5px; margin: 0 0 6px; }
+.publik-jalur p { font-size: 14px; line-height: 1.55; color: var(--redup); margin: 0; }
+
+.publik-benang-merge { display: block; width: 100%; height: 60px; margin: 10px 0 -8px; }
+
+.publik-fase {
+  list-style: none; margin: 34px 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  position: relative; counter-reset: fase;
+}
+.publik-fase::before {
+  content: ""; position: absolute; top: 7px; left: calc(12.5% ); right: calc(12.5%);
+  height: 1.5px; background: var(--garis-kuat);
+}
+.publik-fase li { text-align: center; padding-top: 22px; position: relative; }
+.publik-fase li::before {
+  content: ""; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 15px; height: 15px; border-radius: 50%;
+  background: var(--floral); border: 2.5px solid var(--utama-tua);
+}
+.publik-fase strong { display: block; font-size: 14.5px; color: var(--olive); margin-bottom: 3px; }
+.publik-fase span { font-size: 13px; color: var(--redup); line-height: 1.45; display: block; }
+
+/* ---------- 7. Penutup (gelap) ---------- */
+.publik-penutup { text-align: center; }
+.publik-penutup .publik-h2 { max-width: 620px; margin-inline: auto; }
+.publik-penutup p { max-width: 480px; margin: 0 auto 30px; }
+.publik-lingkar { position: relative; display: inline-block; padding: 24px 26px; }
+.publik-lingkar::before {
+  content: ""; position: absolute; inset: 0; border: 1.5px dashed rgba(255, 255, 255, .38);
+  border-radius: 999px; pointer-events: none;
+}
+.publik-lingkar-simpul {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 9px; height: 9px; border-radius: 50%;
+  border: 2px solid var(--kuning); background: transparent;
+}
+.publik-lingkar-simpul.kiri { left: -30px; }
+.publik-lingkar-simpul.kanan { right: -30px; }
+.publik-lingkar-simpul::after {
+  content: ""; position: absolute; top: 50%; width: 16px; height: 1.5px;
+  background: var(--kuning); opacity: .55;
+}
+.publik-lingkar-simpul.kiri::after { right: 12px; }
+.publik-lingkar-simpul.kanan::after { left: 12px; }
+
+/* Benang vertikal di tepi kiri section terang + simpul masuknya */
+#program::before, #alur::before {
+  content: ""; position: absolute; top: 0; bottom: 0;
+  left: var(--publik-benang-x); width: 1.5px;
+  background: var(--peru); opacity: .5;
+}
+.publik-simpul {
+  position: absolute; top: -8px; z-index: 1;
+  left: calc(var(--publik-benang-x) - 5.75px);
+  width: 13px; height: 13px; border-radius: 50%;
+  background: var(--floral); border: 2.5px solid var(--kuning);
+}
+
+/* Gelombang latar section bidang (dunia multimedia — halus, tanpa fungsi interaktif) */
+.publik-gelombang {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  width: 100%; height: clamp(90px, 14vw, 200px);
+  pointer-events: none;
+}
+
+/* Motif tiga bidang di kanan tiap stasiun */
+.publik-motif { flex-shrink: 0; width: clamp(88px, 11vw, 160px); height: auto; margin-left: auto; opacity: .92; }
+
+/* ---------- 8. Motion Tier 1 (progressive enhancement — tanpa animasi = tetap utuh) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .publik-kursor { animation: publik-kedip 1.1s steps(2, start) infinite; }
+  @keyframes publik-kedip { to { visibility: hidden; } }
+
+  .publik-hero-teks > * { animation: publik-masuk .55s ease-out both; }
+  .publik-hero-teks > :nth-child(2) { animation-delay: .08s; }
+  .publik-hero-teks > :nth-child(3) { animation-delay: .16s; }
+  .publik-hero-teks > :nth-child(4) { animation-delay: .24s; }
+  @keyframes publik-masuk { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+  @supports (animation-timeline: view()) {
+    .publik-reveal {
+      animation: publik-muncul linear both;
+      animation-timeline: view(); animation-range: entry 0% entry 60%;
+    }
+    @keyframes publik-muncul { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+  }
+}
+
+/* ---------- 9. Responsif ---------- */
+@media (max-width: 1023px) {
+  .publik-fase { grid-template-columns: repeat(2, 1fr); gap: 22px 16px; }
+  .publik-fase::before { display: none; }
+}
+@media (max-width: 767px) {
+  .publik-pintu { grid-template-columns: 1fr; }
+  .publik { --publik-benang-x: 8px; }   /* benang mepet ke tepi agar tidak menabrak konten */
+  .publik-motif { width: 76px; }
+  .publik-stasiun li { gap: 14px; }
+  .publik-lingkar-simpul.kiri { left: -18px; }
+  .publik-lingkar-simpul.kanan { right: -18px; }
+  .publik-benang-merge { display: none; }   /* kartu bertumpuk: simpul bawah kartu cukup menandakan alur */
+}
+@media (max-width: 480px) {
+  .btn { min-height: 44px; }
+  .publik-syarat summary { width: 100%; justify-content: center; }
+  .publik-motif { display: none; }      /* layar sangat sempit: teks didahulukan */
+}
+
+/* ---------- 10. Nav & footer khusus landing ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }   /* landing.css hanya termuat di landing */
+}
+
+/* Footer landing: identitas + dua kolom tautan, di atas baris legal */
+.guest-lp .footer { padding: clamp(28px, 4vw, 44px) clamp(20px, 4vw, 44px) 18px; }
+.publik-footer {
+  display: grid; grid-template-columns: 1.4fr .8fr .8fr;
+  gap: clamp(24px, 4vw, 56px);
+  max-width: 1120px; margin: 0 auto 26px;
+}
+.publik-footer-identitas { display: flex; gap: 12px; align-items: flex-start; }
+.publik-footer-identitas img { width: 40px; height: 40px; flex-shrink: 0; margin-top: 2px; }
+.publik-footer-merek { font-family: var(--display); font-size: 19px; font-weight: 600; color: var(--olive); margin: 0 0 6px; }
+.publik-footer-merek b { color: var(--utama-tua); }
+.publik-footer-sub { font-size: 13px; line-height: 1.55; color: var(--redup); margin: 0; max-width: 36ch; }
+.publik-footer-judul {
+  font-family: var(--publik-mono); font-size: 11px; font-weight: 600;
+  letter-spacing: .13em; text-transform: uppercase; color: var(--peru); margin: 0 0 10px;
+}
+.publik-footer-kolom { display: flex; flex-direction: column; gap: 7px; align-items: flex-start; }
+.publik-footer-kolom a { color: var(--teks); text-decoration: none; font-size: 13.5px; }
+.publik-footer-kolom a:hover { color: var(--utama-tua); text-decoration: underline; text-underline-offset: 3px; }
+.guest-lp .footer-legal { max-width: 1120px; margin: 0 auto; padding-top: 14px; border-top: 1px solid var(--garis); }
+
+@media (max-width: 767px) {
+  .publik-footer { grid-template-columns: 1fr; gap: 22px; }
+  .guest-lp .topbar .tautan { display: none; }   /* nav anchor disembunyikan di layar sempit */
+}
