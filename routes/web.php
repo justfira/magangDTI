@@ -53,6 +53,7 @@ Route::middleware(['auth', 'akun.aktif'])->group(function () {
         Route::get('/superadmin/presensi/rekap/csv', [Controllers\Superadmin\KelolaPresensiController::class, 'eksporCsv'])->name('superadmin.presensi.csv');
         Route::get('/superadmin/presensi/{presensi}/koreksi', [Controllers\Superadmin\KelolaPresensiController::class, 'koreksi'])->name('superadmin.presensi.koreksi');
         Route::post('/superadmin/presensi/{presensi}/koreksi', [Controllers\Superadmin\KelolaPresensiController::class, 'simpanKoreksi'])->name('superadmin.presensi.koreksi.simpan');
+        Route::get('/superadmin/koreksi-presensi/{koreksi}/bukti', [Controllers\Superadmin\KelolaPresensiController::class, 'bukti'])->name('superadmin.presensi.bukti');
         Route::get('/superadmin/sertifikat', [Controllers\Superadmin\SertifikatController::class, 'index'])->name('superadmin.sertifikat.index');
         Route::post('/superadmin/sertifikat/{penyelesaian}/unggah', [Controllers\Superadmin\SertifikatController::class, 'unggah'])->name('superadmin.sertifikat.unggah');
     });
