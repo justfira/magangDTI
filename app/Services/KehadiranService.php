@@ -11,6 +11,10 @@ use Carbon\CarbonInterface;
  */
 class KehadiranService
 {
+    public function __construct(private GeofenceService $geofence)
+    {
+    }
+
     /**
      * Syarat dasar peserta boleh presensi / mengajukan kehadiran pada suatu tanggal.
      * Mengembalikan pesan penolakan, atau null jika boleh.
@@ -31,6 +35,33 @@ class KehadiranService
         }
 
         return null;
+    }
+
+    /**
+     * Validasi lokasi dari browser (UC-08 langkah 4–7, UC-09 langkah 6–7).
+     *
+     * @return array{0: array{latitude: float, longitude: float, akurasi: float}|null, 1: string|null}
+     *         [data lokasi, pesan penolakan]
+     */
+    public function periksaLokasi(array $input): array
+    {
+        $lat = $input['latitude'] ?? null;
+        $lon = $input['longitude'] ?? null;
+        $akurasi = $input['akurasi'] ?? null;
+
+        if (! is_numeric($lat) || ! is_numeric($lon) || ! is_numeric($akurasi)) {
+            return [null, 'Lokasi diperlukan untuk melakukan presensi. Izinkan akses lokasi di browser Anda.'];   // UC-08 E1
+        }
+        if (abs((float) $lat) > 90 || abs((float) $lon) > 180 || (float) $akurasi < 0) {
+            return [null, 'Data lokasi tidak valid.'];
+        }
+
+        $hasil = $this->geofence->periksa((float) $lat, (float) $lon, (float) $akurasi);
+        if (! $hasil['valid']) {
+            return [null, $hasil['pesan'].' (jarak ± '.round($hasil['jarak']).' m)'];                          // UC-08 E2
+        }
+
+        return [['latitude' => (float) $lat, 'longitude' => (float) $lon, 'akurasi' => (float) $akurasi], null];
     }
 
     /** Sudah ada catatan presensi (reguler/susulan/koreksi) pada tanggal tersebut. */

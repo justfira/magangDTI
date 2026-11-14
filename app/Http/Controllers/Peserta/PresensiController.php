@@ -54,6 +54,10 @@ class PresensiController extends Controller
         if ($this->kehadiran->sudahTercatat($peserta, today())) {
             return back()->with('info', 'Anda sudah check-in hari ini.');               // A1
         }
+        [$lokasi, $salahLokasi] = $this->kehadiran->periksaLokasi($request->only('latitude', 'longitude', 'akurasi'));
+        if ($salahLokasi) {
+            return back()->withErrors(['presensi' => $salahLokasi]);                  // E1 / E2
+        }
 
         try {
             $presensi = Presensi::create([
@@ -61,9 +65,9 @@ class PresensiController extends Controller
                 'tanggal' => today()->toDateString(),
                 'sumber' => 'REGULER',
                 'waktu_checkin' => now(),                                             // waktu server
-                'lat_checkin' => $request->input('latitude'),
-                'long_checkin' => $request->input('longitude'),
-                'akurasi_checkin' => $request->input('akurasi'),
+                'lat_checkin' => $lokasi['latitude'],
+                'long_checkin' => $lokasi['longitude'],
+                'akurasi_checkin' => $lokasi['akurasi'],
             ]);
         } catch (UniqueConstraintViolationException) {
             // dua klik bersamaan: baris kedua ditolak UNIQUE (id_peserta_magang, tanggal)
@@ -93,12 +97,16 @@ class PresensiController extends Controller
         if ($presensi->waktu_checkout) {
             return back()->with('info', 'Anda sudah check-out hari ini.');
         }
+        [$lokasi, $salahLokasi] = $this->kehadiran->periksaLokasi($request->only('latitude', 'longitude', 'akurasi'));
+        if ($salahLokasi) {
+            return back()->withErrors(['presensi' => $salahLokasi]);                  // UC-08 langkah 12
+        }
 
         $presensi->update([
             'waktu_checkout' => now(),
-            'lat_checkout' => $request->input('latitude'),
-            'long_checkout' => $request->input('longitude'),
-            'akurasi_checkout' => $request->input('akurasi'),
+            'lat_checkout' => $lokasi['latitude'],
+            'long_checkout' => $lokasi['longitude'],
+            'akurasi_checkout' => $lokasi['akurasi'],
         ]);
         Log::channel('aktivitas')->info('check_out', ['id_presensi' => $presensi->id_presensi]);
 

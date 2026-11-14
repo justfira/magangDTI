@@ -25,16 +25,19 @@
     @unless ($alasanTidakBoleh)
         <div class="aksi">
             @if (! $hariIni)
-                <form method="POST" action="{{ route('peserta.presensi.checkin') }}">@csrf
+                <form method="POST" action="{{ route('peserta.presensi.checkin') }}" data-butuh-lokasi>@csrf
                     <button class="btn">Check-in</button>
                 </form>
             @elseif ($hariIni->sumber === 'REGULER' && ! $hariIni->waktu_checkout)
-                <form method="POST" action="{{ route('peserta.presensi.checkout') }}">@csrf
+                <form method="POST" action="{{ route('peserta.presensi.checkout') }}" data-butuh-lokasi>@csrf
                     <button class="btn">Check-out</button>
                 </form>
             @endif
         </div>
+        @include('peserta.presensi._lokasi')
     @endunless
+    <p class="redup">Presensi hanya dapat dilakukan dalam radius {{ config('presensi.kantor.radius_meter') }} m dari
+        {{ config('presensi.kantor.nama') }} dengan akurasi lokasi maksimal {{ config('presensi.kantor.batas_akurasi_meter') }} m.</p>
 </div>
 
 <div class="kartu">
