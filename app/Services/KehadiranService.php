@@ -3,7 +3,9 @@
 namespace App\Services;
 
 use App\Models\PesertaMagang;
+use Carbon\Carbon;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Collection;
 
 /**
  * Aturan bisnis kehadiran yang dipakai bersama oleh Modul D
@@ -62,6 +64,39 @@ class KehadiranService
         }
 
         return [['latitude' => (float) $lat, 'longitude' => (float) $lon, 'akurasi' => (float) $akurasi], null];
+    }
+
+    /**
+     * Rekap kehadiran bulanan per peserta (UC-10 langkah 5–11).
+     *  - hadir      : presensi REGULER lengkap (check-in & check-out) + SUSULAN (disetujui) + KOREKSI.
+     *                 Satu tanggal = satu hari karena UNIQUE (id_peserta_magang, tanggal).
+     *  - izin       : izin disetujui, TIDAK dihitung sebagai hadir.
+     *  - belum_checkout : presensi reguler tanpa check-out, tidak dihitung hadir (perlu dikoreksi).
+     */
+    public function rekapBulanan(int $tahun, int $bulan): Collection
+    {
+        $awal = Carbon::create($tahun, $bulan, 1)->startOfDay();
+        $akhir = $awal->copy()->endOfMonth();
+        $rentang = fn ($q, string $kolom) => $q->whereBetween($kolom, [$awal->toDateString(), $akhir->toDateString()]);
+
+        return PesertaMagang::query()
+            ->with(['pengguna', 'seksi'])
+            ->whereDate('tanggal_mulai', '<=', $akhir)
+            ->whereDate('tanggal_selesai', '>=', $awal)
+            ->withCount([
+                'presensi as hadir' => fn ($q) => $rentang($q, 'tanggal')->where(fn ($w) => $w
+                    ->where(fn ($r) => $r->where('sumber', 'REGULER')->whereNotNull('waktu_checkin')->whereNotNull('waktu_checkout'))
+                    ->orWhereIn('sumber', ['SUSULAN', 'KOREKSI'])),
+                'presensi as hadir_susulan' => fn ($q) => $rentang($q, 'tanggal')->where('sumber', 'SUSULAN'),
+                'presensi as belum_checkout' => fn ($q) => $rentang($q, 'tanggal')->where('sumber', 'REGULER')->whereNull('waktu_checkout'),
+                'pengajuanKehadiran as izin_penuh' => fn ($q) => $rentang($q, 'tanggal_kegiatan')
+                    ->where('jenis', 'IZIN')->where('jenis_izin', 'Penuh')->where('status', 'Disetujui'),
+                'pengajuanKehadiran as izin_sebagian' => fn ($q) => $rentang($q, 'tanggal_kegiatan')
+                    ->where('jenis', 'IZIN')->where('jenis_izin', 'Sebagian')->where('status', 'Disetujui'),
+            ])
+            ->get()
+            ->sortBy(fn ($p) => $p->pengguna->nama_lengkap)
+            ->values();
     }
 
     /** Masih ada pengajuan izin/susulan (menunggu atau disetujui) pada tanggal tersebut. */
