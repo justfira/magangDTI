@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('judul', 'Koreksi Presensi')
 @section('konten')
+<link rel="stylesheet" href="{{ asset('css/presensi.css') }}">
 <h1>Koreksi Presensi</h1>
 
 <div class="kartu">

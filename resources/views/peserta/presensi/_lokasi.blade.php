@@ -3,7 +3,7 @@
     Pakai: tambahkan atribut data-butuh-lokasi pada <form>, dan sertakan @include('peserta.presensi._lokasi').
     Catatan: browser hanya mengizinkan lokasi di HTTPS atau localhost/127.0.0.1.
 --}}
-<p class="redup" id="info-lokasi" hidden></p>
+<p class="pr-catatan-lokasi" id="info-lokasi" hidden></p>
 <script>
 (function () {
     const info = document.getElementById('info-lokasi');

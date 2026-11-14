@@ -1,68 +1,69 @@
 @extends('layouts.app')
 @section('judul', 'Verifikasi Izin & Presensi Susulan')
 @section('konten')
+<link rel="stylesheet" href="{{ asset('css/presensi.css') }}">
+
 <h1>Verifikasi Izin &amp; Presensi Susulan</h1>
 
-<div class="kartu">
-    <form method="GET" class="dua-kolom">
-        <label>Status
-            <select name="status" onchange="this.form.submit()">
-                <option value="">Semua</option>
-                @foreach (\App\Models\PengajuanKehadiran::STATUS as $s)
-                    <option value="{{ $s }}" @selected($status === $s)>{{ $s }} ({{ $jumlah[$s] ?? 0 }})</option>
-                @endforeach
-            </select>
-        </label>
-        <label>Jenis
-            <select name="jenis" onchange="this.form.submit()">
-                <option value="">Semua</option>
-                <option value="SUSULAN" @selected($jenis === 'SUSULAN')>Presensi susulan</option>
-                <option value="IZIN" @selected($jenis === 'IZIN')>Izin</option>
-            </select>
-        </label>
-    </form>
-</div>
+@php
+    $tautan = fn (?string $s, ?string $j) => route('mentor.kehadiran.index', array_filter(['status' => $s, 'jenis' => $j]));
+    $total = $jumlah->sum();
+@endphp
+<nav class="pr-tab" aria-label="Filter status">
+    <a href="{{ $tautan(null, $jenis) }}" class="{{ $status ? '' : 'aktif' }}">Semua ({{ $total }})</a>
+    @foreach (\App\Models\PengajuanKehadiran::STATUS as $s)
+        <a href="{{ $tautan($s, $jenis) }}" class="{{ $status === $s ? 'aktif' : '' }}">{{ $s }} ({{ $jumlah[$s] ?? 0 }})</a>
+    @endforeach
+</nav>
+<nav class="pr-tab" aria-label="Filter jenis">
+    <a href="{{ $tautan($status, null) }}" class="{{ $jenis ? '' : 'aktif' }}">Semua jenis</a>
+    <a href="{{ $tautan($status, 'SUSULAN') }}" class="{{ $jenis === 'SUSULAN' ? 'aktif' : '' }}">Presensi susulan</a>
+    <a href="{{ $tautan($status, 'IZIN') }}" class="{{ $jenis === 'IZIN' ? 'aktif' : '' }}">Izin</a>
+</nav>
 
 @forelse ($pengajuan as $p)
-    <div class="kartu">
-        <div class="judul-aksi">
+    @php $garis = ['Menunggu Verifikasi' => 'pr-garis-tunggu', 'Disetujui' => 'pr-garis-sukses', 'Ditolak' => 'pr-garis-gagal'][$p->status] ?? ''; @endphp
+    <article class="kartu pr-pengajuan {{ $garis }}">
+        <div class="pr-kepala">
             <h2>{{ $p->pesertaMagang->pengguna->nama_lengkap }}</h2>
-            <span class="status">{{ $p->status }}</span>
+            <div>
+                @include('peserta.presensi._badge', ['status' => $p->jenis === 'IZIN' ? 'Izin' : 'SUSULAN',
+                    'label' => $p->jenis === 'IZIN' ? 'Izin ('.$p->jenis_izin.')' : 'Presensi susulan'])
+                @include('peserta.presensi._badge', ['status' => $p->status])
+            </div>
         </div>
-        <table>
-            <tr><th>Jenis</th><td>{{ $p->jenis === 'IZIN' ? 'Izin ('.$p->jenis_izin.')' : 'Presensi susulan' }}</td></tr>
-            <tr><th>Tanggal kegiatan</th><td>{{ $p->tanggal_kegiatan->translatedFormat('l, d F Y') }}</td></tr>
-            <tr><th>Diajukan</th><td>{{ $p->waktu_pengajuan->format('d/m/Y H:i') }}</td></tr>
-            <tr><th>Alasan</th><td>{{ $p->alasan }}</td></tr>
-            @if ($p->keterangan)<tr><th>Keterangan</th><td>{{ $p->keterangan }}</td></tr>@endif
+        <dl class="pr-meta">
+            <dt>Tanggal kegiatan</dt><dd>{{ $p->tanggal_kegiatan->translatedFormat('l, d F Y') }}</dd>
+            <dt>Diajukan</dt><dd>{{ $p->waktu_pengajuan->translatedFormat('d M Y, H:i') }}</dd>
+            <dt>Alasan</dt><dd>{{ $p->alasan }}</dd>
+            @if ($p->keterangan)<dt>Keterangan</dt><dd>{{ $p->keterangan }}</dd>@endif
             @if ($p->jenis === 'IZIN')
-                <tr><th>Bukti pendukung</th><td>
-                    @if ($p->path_lampiran)
+                <dt>Bukti pendukung</dt>
+                <dd>@if ($p->path_lampiran)
                         <a href="{{ route('mentor.kehadiran.lampiran', $p) }}" target="_blank" rel="noopener">Lihat lampiran</a>
-                    @else <span class="redup">Tidak ada (opsional)</span> @endif
-                </td></tr>
+                    @else <span class="redup">Tidak ada (opsional)</span> @endif</dd>
+            @else
+                <dt>Lokasi pengajuan</dt>
+                <dd>{{ $p->latitude }}, {{ $p->longitude }} <span class="redup">(akurasi ± {{ round($p->akurasi_meter) }} m)</span></dd>
             @endif
-            @if ($p->jenis === 'SUSULAN')
-                <tr><th>Lokasi pengajuan</th><td>{{ $p->latitude }}, {{ $p->longitude }} (akurasi ± {{ round($p->akurasi_meter) }} m)</td></tr>
-            @endif
-            @if ($p->catatan_keputusan)<tr><th>Catatan keputusan</th><td>{{ $p->catatan_keputusan }}</td></tr>@endif
-        </table>
+            @if ($p->catatan_keputusan)<dt>Catatan keputusan</dt><dd>{{ $p->catatan_keputusan }}</dd>@endif
+        </dl>
 
         @if ($p->status === 'Menunggu Verifikasi')
-            <div class="dua-kolom">
+            <div class="pr-keputusan">
                 <form class="form" method="POST" action="{{ route('mentor.kehadiran.setujui', $p) }}">@csrf
-                    <label>Catatan (opsional) <textarea name="catatan_keputusan" rows="2"></textarea></label>
+                    <label>Catatan (opsional) <textarea name="catatan_keputusan"></textarea></label>
                     <button class="btn">Setujui</button>
                 </form>
                 <form class="form" method="POST" action="{{ route('mentor.kehadiran.tolak', $p) }}">@csrf
-                    <label>Alasan penolakan (wajib) <textarea name="catatan_keputusan" rows="2"></textarea></label>
+                    <label>Alasan penolakan (wajib) <textarea name="catatan_keputusan"></textarea></label>
                     <button class="btn btn-garis">Tolak</button>
                 </form>
             </div>
         @endif
-    </div>
+    </article>
 @empty
-    <div class="kartu"><p class="redup">Tidak ada pengajuan.</p></div>
+    <div class="kartu"><p class="redup">Tidak ada pengajuan untuk filter ini.</p></div>
 @endforelse
 {{ $pengajuan->links() }}
 @endsection

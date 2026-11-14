@@ -1,6 +1,8 @@
 @extends('layouts.app')
 @section('judul', 'Izin & Presensi Susulan')
 @section('konten')
+<link rel="stylesheet" href="{{ asset('css/presensi.css') }}">
+
 <div class="judul-aksi">
     <h1>Izin &amp; Presensi Susulan</h1>
     <div class="aksi">
@@ -10,22 +12,26 @@
 </div>
 
 <div class="kartu">
-    <table>
-        <thead><tr><th>Tanggal</th><th>Jenis</th><th>Alasan</th><th>Status</th><th>Catatan Mentor</th></tr></thead>
-        <tbody>
-        @forelse ($pengajuan as $p)
-            <tr>
-                <td>{{ $p->tanggal_kegiatan->translatedFormat('d M Y') }}</td>
-                <td>{{ $p->jenis === 'IZIN' ? 'Izin ('.$p->jenis_izin.')' : 'Presensi susulan' }}</td>
-                <td>{{ \Illuminate\Support\Str::limit($p->alasan, 80) }}</td>
-                <td><span class="status">{{ $p->status }}</span></td>
-                <td>{{ $p->catatan_keputusan ?? '—' }}</td>
-            </tr>
-        @empty
-            <tr><td colspan="5" class="redup">Belum ada pengajuan.</td></tr>
-        @endforelse
-        </tbody>
-    </table>
+    <div class="pr-tabel">
+        <table>
+            <thead><tr><th>Tanggal</th><th>Jenis</th><th>Alasan</th><th>Status</th><th>Catatan Mentor</th></tr></thead>
+            <tbody>
+            @forelse ($pengajuan as $p)
+                <tr>
+                    <td>{{ $p->tanggal_kegiatan->translatedFormat('D, d M Y') }}</td>
+                    <td>@include('peserta.presensi._badge', ['status' => $p->jenis === 'IZIN' ? 'Izin' : 'SUSULAN',
+                        'label' => $p->jenis === 'IZIN' ? 'Izin '.strtolower($p->jenis_izin) : 'Presensi susulan'])</td>
+                    <td>{{ \Illuminate\Support\Str::limit($p->alasan, 80) }}</td>
+                    <td>@include('peserta.presensi._badge', ['status' => $p->status])</td>
+                    <td>{{ $p->catatan_keputusan ?? '—' }}</td>
+                </tr>
+            @empty
+                <tr><td colspan="5" class="redup">Belum ada pengajuan. Ajukan izin jika tidak dapat hadir, atau presensi susulan
+                    jika hari ini Anda bertugas di luar kantor dan belum sempat check-in.</td></tr>
+            @endforelse
+            </tbody>
+        </table>
+    </div>
     {{ $pengajuan->links() }}
 </div>
 @endsection

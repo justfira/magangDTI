@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('judul', 'Ajukan Izin')
 @section('konten')
+<link rel="stylesheet" href="{{ asset('css/presensi.css') }}">
 <h1>Ajukan Izin Ketidakhadiran</h1>
 
 <div class="kartu">
