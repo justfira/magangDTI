@@ -64,6 +64,15 @@ class KehadiranService
         return [['latitude' => (float) $lat, 'longitude' => (float) $lon, 'akurasi' => (float) $akurasi], null];
     }
 
+    /** Masih ada pengajuan izin/susulan (menunggu atau disetujui) pada tanggal tersebut. */
+    public function adaPengajuanAktif(PesertaMagang $peserta, CarbonInterface $tanggal): bool
+    {
+        return $peserta->pengajuanKehadiran()
+            ->whereDate('tanggal_kegiatan', $tanggal->toDateString())
+            ->whereIn('status', ['Menunggu Verifikasi', 'Disetujui'])
+            ->exists();
+    }
+
     /** Sudah ada catatan presensi (reguler/susulan/koreksi) pada tanggal tersebut. */
     public function sudahTercatat(PesertaMagang $peserta, CarbonInterface $tanggal): bool
     {
