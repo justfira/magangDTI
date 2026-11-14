@@ -5,6 +5,7 @@
     <h1>Izin &amp; Presensi Susulan</h1>
     <div class="aksi">
         <a class="btn btn-garis" href="{{ route('peserta.kehadiran.create', ['jenis' => 'SUSULAN']) }}">+ Presensi Susulan</a>
+        <a class="btn" href="{{ route('peserta.kehadiran.create', ['jenis' => 'IZIN']) }}">+ Ajukan Izin</a>
     </div>
 </div>
 

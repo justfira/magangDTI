@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\PengajuanKehadiran;
 use App\Services\KehadiranService;
 use App\Support\Notifikasi;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
@@ -38,7 +40,7 @@ class PengajuanKehadiranController extends Controller
     {
         $peserta = $this->pesertaLogin();
         abort_unless($peserta, 403, 'Anda belum terdaftar sebagai peserta magang.');
-        $jenis = 'SUSULAN';   // form IZIN ditambahkan pada item #89
+        $jenis = $request->query('jenis') === 'IZIN' ? 'IZIN' : 'SUSULAN';
 
         return view('peserta.kehadiran.create_'.strtolower($jenis), [
             'peserta' => $peserta,
@@ -100,10 +102,49 @@ class PengajuanKehadiranController extends Controller
         return redirect()->route('peserta.kehadiran.index')->with('sukses', 'Presensi susulan berhasil diajukan dan menunggu verifikasi mentor.');
     }
 
-    /** UC-11 — diimplementasikan pada item #89. */
+    /** UC-11 langkah 1–8: pengajuan izin ketidakhadiran. */
     private function simpanIzin(Request $request): RedirectResponse
     {
-        return $this->belumDiimplementasikan('Pengajuan Izin', 'UC-11');
+        $peserta = $this->pesertaLogin();
+        $data = $request->validate([
+            'tanggal_kegiatan' => ['required', 'date'],
+            'jenis_izin' => ['required', Rule::in(PengajuanKehadiran::JENIS_IZIN)],
+            'alasan' => ['required', 'string', 'max:150'],
+            'keterangan' => ['nullable', 'string', 'max:2000'],
+            'lampiran' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],      // A2: lampiran opsional
+        ], [
+            'alasan.required' => 'Alasan izin wajib diisi.',                                     // E5
+            'lampiran.mimes' => 'Lampiran harus berupa PDF, JPG, atau PNG.',
+            'lampiran.max' => 'Ukuran lampiran maksimal 2 MB.',
+        ]);
+        $tanggal = Carbon::parse($data['tanggal_kegiatan'])->startOfDay();
+
+        if ($alasan = $this->kehadiran->alasanTidakBoleh($peserta, $tanggal)) {
+            return back()->withInput()->withErrors(['pengajuan' => $alasan]);                    // E1, E3
+        }
+        if ($this->kehadiran->sudahTercatat($peserta, $tanggal)) {
+            return back()->withInput()->withErrors(['pengajuan' => 'Anda sudah tercatat hadir pada tanggal tersebut, izin tidak dapat diajukan.']);   // E2
+        }
+        if ($this->kehadiran->adaPengajuanAktif($peserta, $tanggal)) {
+            return back()->withInput()->withErrors(['pengajuan' => 'Sudah ada pengajuan izin/susulan untuk tanggal ini yang belum ditolak.']);
+        }
+
+        $pengajuan = PengajuanKehadiran::create([
+            'id_peserta_magang' => $peserta->id_peserta_magang,
+            'jenis' => 'IZIN',
+            'tanggal_kegiatan' => $tanggal->toDateString(),
+            'jenis_izin' => $data['jenis_izin'],
+            'alasan' => $data['alasan'],
+            'keterangan' => $data['keterangan'] ?? null,
+            // disk "local" = storage/app/private: tidak bisa diakses lewat URL publik
+            'path_lampiran' => $request->file('lampiran')?->store('izin/'.$peserta->id_peserta_magang, 'local'),
+            'waktu_pengajuan' => now(),
+            'status' => 'Menunggu Verifikasi',
+        ]);
+
+        $this->beriTahuMentor($pengajuan, 'izin '.strtolower($pengajuan->jenis_izin));
+
+        return redirect()->route('peserta.kehadiran.index')->with('sukses', 'Pengajuan izin berhasil dikirim dan menunggu verifikasi mentor.');
     }
 
     private function beriTahuMentor(PengajuanKehadiran $pengajuan, string $label): void
