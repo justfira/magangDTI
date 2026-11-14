@@ -12,7 +12,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Verifikasi Izin & Presensi Susulan (UC-09 / UC-11)
@@ -113,6 +115,16 @@ class VerifikasiKehadiranController extends Controller
         $this->beriTahuPeserta($pengajuanKehadiran, 'ditolak');
 
         return back()->with('sukses', 'Pengajuan '.strtolower($this->label($pengajuanKehadiran)).' ditolak.');
+    }
+
+    /** Lihat bukti pendukung izin (disimpan privat, hanya mentor peserta tsb yang boleh membuka). */
+    public function lampiran(PengajuanKehadiran $pengajuanKehadiran): StreamedResponse
+    {
+        $this->pastikanBimbingan($pengajuanKehadiran->pesertaMagang);
+        $path = $pengajuanKehadiran->path_lampiran;
+        abort_unless($path && Storage::disk('local')->exists($path), 404, 'Lampiran tidak ditemukan.');
+
+        return Storage::disk('local')->response($path);
     }
 
     private function label(PengajuanKehadiran $p): string

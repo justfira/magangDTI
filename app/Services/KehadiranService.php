@@ -73,6 +73,15 @@ class KehadiranService
             ->exists();
     }
 
+    /** Izin Penuh yang sudah disetujui mentor pada tanggal tersebut (UC-11: tidak boleh sekaligus hadir). */
+    public function izinPenuhDisetujui(PesertaMagang $peserta, CarbonInterface $tanggal): bool
+    {
+        return $peserta->pengajuanKehadiran()
+            ->where('jenis', 'IZIN')->where('jenis_izin', 'Penuh')->where('status', 'Disetujui')
+            ->whereDate('tanggal_kegiatan', $tanggal->toDateString())
+            ->exists();
+    }
+
     /** Sudah ada catatan presensi (reguler/susulan/koreksi) pada tanggal tersebut. */
     public function sudahTercatat(PesertaMagang $peserta, CarbonInterface $tanggal): bool
     {

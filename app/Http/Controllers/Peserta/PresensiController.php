@@ -40,7 +40,8 @@ class PresensiController extends Controller
             'peserta' => $peserta,
             'hariIni' => $hariIni,
             'riwayat' => $riwayat,
-            'alasanTidakBoleh' => $this->kehadiran->alasanTidakBoleh($peserta, today()),
+            'alasanTidakBoleh' => $this->kehadiran->alasanTidakBoleh($peserta, today())
+                ?? ($this->kehadiran->izinPenuhDisetujui($peserta, today()) ? 'Anda memiliki izin penuh yang disetujui untuk hari ini.' : null),
         ]);
     }
 
@@ -53,6 +54,9 @@ class PresensiController extends Controller
         }
         if ($this->kehadiran->sudahTercatat($peserta, today())) {
             return back()->with('info', 'Anda sudah check-in hari ini.');               // A1
+        }
+        if ($this->kehadiran->izinPenuhDisetujui($peserta, today())) {
+            return back()->withErrors(['presensi' => 'Anda memiliki izin penuh yang disetujui untuk hari ini.']);
         }
         [$lokasi, $salahLokasi] = $this->kehadiran->periksaLokasi($request->only('latitude', 'longitude', 'akurasi'));
         if ($salahLokasi) {

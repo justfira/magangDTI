@@ -88,6 +88,7 @@ Route::middleware(['auth', 'akun.aktif'])->group(function () {
         Route::get('/mentor/verifikasi-kehadiran', [Controllers\Mentor\VerifikasiKehadiranController::class, 'index'])->name('mentor.kehadiran.index');
         Route::post('/mentor/verifikasi-kehadiran/{pengajuanKehadiran}/setujui', [Controllers\Mentor\VerifikasiKehadiranController::class, 'setujui'])->name('mentor.kehadiran.setujui');
         Route::post('/mentor/verifikasi-kehadiran/{pengajuanKehadiran}/tolak', [Controllers\Mentor\VerifikasiKehadiranController::class, 'tolak'])->name('mentor.kehadiran.tolak');
+        Route::get('/mentor/verifikasi-kehadiran/{pengajuanKehadiran}/lampiran', [Controllers\Mentor\VerifikasiKehadiranController::class, 'lampiran'])->name('mentor.kehadiran.lampiran');
         Route::get('/mentor/logbook', [Controllers\Mentor\PeriksaLogbookController::class, 'index'])->name('mentor.logbook.index');
         Route::post('/mentor/logbook/{logbook}/periksa', [Controllers\Mentor\PeriksaLogbookController::class, 'periksa'])->name('mentor.logbook.periksa');
         Route::get('/mentor/evaluasi', [Controllers\Mentor\EvaluasiController::class, 'index'])->name('mentor.evaluasi.index');

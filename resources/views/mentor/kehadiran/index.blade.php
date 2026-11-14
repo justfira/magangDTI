@@ -35,6 +35,13 @@
             <tr><th>Diajukan</th><td>{{ $p->waktu_pengajuan->format('d/m/Y H:i') }}</td></tr>
             <tr><th>Alasan</th><td>{{ $p->alasan }}</td></tr>
             @if ($p->keterangan)<tr><th>Keterangan</th><td>{{ $p->keterangan }}</td></tr>@endif
+            @if ($p->jenis === 'IZIN')
+                <tr><th>Bukti pendukung</th><td>
+                    @if ($p->path_lampiran)
+                        <a href="{{ route('mentor.kehadiran.lampiran', $p) }}" target="_blank" rel="noopener">Lihat lampiran</a>
+                    @else <span class="redup">Tidak ada (opsional)</span> @endif
+                </td></tr>
+            @endif
             @if ($p->jenis === 'SUSULAN')
                 <tr><th>Lokasi pengajuan</th><td>{{ $p->latitude }}, {{ $p->longitude }} (akurasi ± {{ round($p->akurasi_meter) }} m)</td></tr>
             @endif
