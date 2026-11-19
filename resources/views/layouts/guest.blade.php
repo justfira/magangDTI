@@ -24,14 +24,14 @@
                     <a class="btn btn-garis" href="{{ route('dashboard') }}">Dashboard</a>
                 @else
                     <a class="tautan" href="{{ route('informasi-program') }}">Program Magang</a>
-                    <a class="btn" href="{{ route('login') }}">Login</a>
+                    <a class="btn" href="{{ route('login') }}">Login <x-ikon nama="panah-kanan" /></a>
                 @endauth
             @endif
         </div>
     </header>
     <main class="konten guest-konten">
-        @foreach (['sukses', 'info'] as $kunci)
-            @if (session($kunci))<div class="alert alert-{{ $kunci }}">{{ session($kunci) }}</div>@endif
+        @foreach (['sukses' => 'centang', 'info' => 'info'] as $kunci => $ikon)
+            @if (session($kunci))<div class="alert alert-{{ $kunci }}"><x-ikon :nama="$ikon" /><div>{{ session($kunci) }}</div></div>@endif
         @endforeach
         @yield('konten')
     </main>

@@ -8,6 +8,7 @@ return [
         ['label' => 'Permohonan Institusi', 'route' => 'superadmin.permohonan.index'],
         ['label' => 'Verifikasi Pengajuan', 'route' => 'superadmin.verifikasi.index'],
         ['label' => 'Manajemen Akun', 'route' => 'superadmin.akun.index'],
+        ['label' => 'Hak Akses', 'route' => 'superadmin.hak-akses'],
         ['label' => 'Aktivasi Peserta', 'route' => 'superadmin.akun.diterima'],
         ['label' => 'Kelola Presensi', 'route' => 'superadmin.presensi.index'],
         ['label' => 'Sertifikat', 'route' => 'superadmin.sertifikat.index'],

@@ -16,6 +16,7 @@ $ikonMenu = [
     'Permohonan Institusi'     => 'M5 21V4h9v17M8 8h.01M11 8h.01M8 12h.01M11 12h.01M14 10h5v11M17 14h.01M17 17h.01M3 21h18',
     'Verifikasi Pengajuan'     => 'M9 4h6v3H9zM9 5H7a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-2M9 13l2 2 4-4',
     'Manajemen Akun'           => 'M8 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20v-1.5A4.5 4.5 0 0 1 7 14h2a4.5 4.5 0 0 1 4.5 4.5V20M16 14.5a3 3 0 1 0 0-6M18.5 14h.5A3.5 3.5 0 0 1 22 17.5V20',
+    'Hak Akses'                => 'M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6zM9 12l2 2 4-4',
     'Aktivasi Peserta'         => 'M8 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2.5 20v-1.5A4.5 4.5 0 0 1 7 14h2a4.5 4.5 0 0 1 4.5 4.5V20M14.5 13l2 2 4-4',
     'Kelola Presensi'          => 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 7v5l3.5 2',
     'Sertifikat'               => 'M12 14a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM8.5 12.5 7 21l5-2.8L17 21l-1.5-8.5',
@@ -47,54 +48,70 @@ $ikonMenu = [
             <span class="merek-sub">Universitas Andalas</span>
         </span>
     </a>
+    <p class="menu-label">Menu utama</p>
     <nav class="menu">
         @foreach ($menu as $item)
             @if (\Illuminate\Support\Facades\Route::has($item['route']))
                 <a href="{{ route($item['route']) }}" class="{{ request()->routeIs($item['route'].'*') ? 'aktif' : '' }}">
-                    <svg class="ikon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="{{ $ikonMenu[$item['label']] ?? 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z' }}"/>
-                    </svg>
+                    <span class="ikon-wadah">
+                        <svg class="ikon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="{{ $ikonMenu[$item['label']] ?? 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z' }}"/>
+                        </svg>
+                    </span>
                     <span>{{ $item['label'] }}</span>
                 </a>
             @endif
         @endforeach
     </nav>
-    <div class="sidebar-kaki">Sistem Pengelolaan Magang<br>Direktorat Teknologi Informasi</div>
+    <div class="sidebar-kaki">
+        <b>Sistem Pengelolaan Magang</b>
+        Direktorat Teknologi Informasi Universitas Andalas
+    </div>
 </aside>
 
 <div class="kolom-utama">
     <header class="topbar">
         <button class="burger" onclick="document.body.classList.toggle('menu-buka')" aria-label="Menu" aria-controls="menu-samping">
-            <svg class="ikon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            <svg class="ikon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
         </button>
-        <p class="breadcrumb"><span class="asal">Beranda</span><span class="pemisah">/</span><b>@yield('judul', 'Dashboard')</b></p>
+        <p class="breadcrumb">
+            <span class="asal">Beranda</span>
+            <span class="pemisah"><x-ikon nama="chevron-kanan" /></span>
+            <b>@yield('judul', 'Dashboard')</b>
+        </p>
         <div class="topbar-kanan">
+            <span class="tanggal-chip"><x-ikon nama="kalender" />{{ now()->translatedFormat('l, d M Y') }}</span>
             <a href="{{ route('notifikasi.index') }}" class="lonceng" title="Notifikasi">
-                <svg class="ikon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M10.3 21a2 2 0 0 0 3.4 0"/></svg>
+                <x-ikon nama="lonceng" />
                 @if($jumlahNotifikasi)<span class="badge">{{ $jumlahNotifikasi }}</span>@endif
             </a>
             <details class="profil">
                 <summary>
                     <span class="avatar">{{ mb_strtoupper(mb_substr(auth()->user()->nama_lengkap ?? '?', 0, 1)) }}</span>
-                    <span class="nama">{{ auth()->user()->nama_lengkap }} <small>({{ auth()->user()->peran->nama_peran }})</small></span>
+                    <span class="nama">{{ auth()->user()->nama_lengkap }} <small>{{ auth()->user()->peran->nama_peran }}</small></span>
+                    <x-ikon nama="chevron-bawah" />
                 </summary>
                 <div class="profil-menu">
-                    <p class="profil-nama">{{ auth()->user()->nama_lengkap }}</p>
-                    <p class="redup peran">{{ auth()->user()->peran->nama_peran }}</p>
-                    <hr>
+                    <div class="profil-kepala">
+                        <span class="avatar avatar-besar">{{ mb_strtoupper(mb_substr(auth()->user()->nama_lengkap ?? '?', 0, 1)) }}</span>
+                        <div>
+                            <p class="profil-nama">{{ auth()->user()->nama_lengkap }}</p>
+                            <p class="redup peran">{{ auth()->user()->peran->nama_peran }}</p>
+                        </div>
+                    </div>
                     <form method="POST" action="{{ route('logout') }}">@csrf
-                        <button class="btn btn-bahaya">Keluar</button>
+                        <button class="tombol-menu"><x-ikon nama="keluar" /> Keluar</button>
                     </form>
                 </div>
             </details>
         </div>
     </header>
     <main class="konten">
-        @foreach (['sukses' => 'sukses', 'info' => 'info'] as $kunci => $kelas)
-            @if (session($kunci))<div class="alert alert-{{ $kelas }}">{{ session($kunci) }}</div>@endif
+        @foreach (['sukses' => 'centang', 'info' => 'info', 'gagal' => 'peringatan'] as $kunci => $ikon)
+            @if (session($kunci))<div class="alert alert-{{ $kunci }}"><x-ikon :nama="$ikon" /><div>{{ session($kunci) }}</div></div>@endif
         @endforeach
         @if ($errors->any())
-            <div class="alert alert-gagal"><ul>@foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul></div>
+            <div class="alert alert-gagal"><x-ikon nama="peringatan" /><ul>@foreach (array_unique($errors->all()) as $e)<li>{{ $e }}</li>@endforeach</ul></div>
         @endif
         @yield('konten')
     </main>
