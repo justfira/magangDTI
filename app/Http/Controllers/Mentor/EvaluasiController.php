@@ -34,7 +34,7 @@ class EvaluasiController extends Controller
             return redirect()->route('dashboard')->with('info', 'Halaman ini memerlukan akun mentor dengan data pegawai.');
         }
 
-        $pesertaBimbingan = PesertaMagang::where('id_mentor', $pegawai->id_pegawai)
+        $semua = PesertaMagang::where('id_mentor', $pegawai->id_pegawai)
             ->with(['pengguna', 'keputusan.calon.pengajuan', 'evaluasiPeserta'])
             ->withCount([
                 'tugas',
@@ -44,7 +44,51 @@ class EvaluasiController extends Controller
             ->orderByDesc('id_peserta_magang')
             ->get();
 
-        return view('mentor.evaluasi.index', compact('pesertaBimbingan'));
+        $ringkasan = [
+            'total' => $semua->count(),
+            'aktif' => $semua->where('status_magang', 'Aktif')->count(),
+            'selesai_dinilai' => $semua->filter(
+                fn (PesertaMagang $p) => in_array($p->evaluasiPeserta?->status_evaluasi, ['Memenuhi', 'Sudah Dinilai'], true)
+            )->count(),
+            'belum_tuntas' => $semua->filter(
+                fn (PesertaMagang $p) => ! in_array($p->evaluasiPeserta?->status_evaluasi, ['Memenuhi', 'Sudah Dinilai'], true)
+            )->count(),
+        ];
+
+        $cari = trim((string) $request->query('cari', ''));
+        $filterJalur = $request->query('jalur');
+        $filterStatus = $request->query('status');
+
+        $pesertaBimbingan = $semua->filter(function (PesertaMagang $p) use ($cari, $filterJalur, $filterStatus) {
+            $calon = $p->calonPeserta();
+            $pengajuan = $calon?->pengajuan;
+            $jalur = $pengajuan?->jalur;
+            $statusEv = $p->evaluasiPeserta?->status_evaluasi ?? 'Belum Dievaluasi';
+
+            if ($cari !== '') {
+                $teks = mb_strtolower(implode(' ', array_filter([
+                    $p->pengguna?->nama_lengkap,
+                    $calon?->nomor_induk_pendidikan,
+                    $calon?->institusi_asal,
+                    $pengajuan?->nama_institusi,
+                ])));
+                if (! str_contains($teks, mb_strtolower($cari))) {
+                    return false;
+                }
+            }
+
+            if (in_array($filterJalur, ['DTI', 'INSTITUSI'], true) && $jalur !== $filterJalur) {
+                return false;
+            }
+
+            if ($filterStatus !== null && $filterStatus !== '' && $statusEv !== $filterStatus) {
+                return false;
+            }
+
+            return true;
+        })->values();
+
+        return view('mentor.evaluasi.index', compact('pesertaBimbingan', 'ringkasan'));
     }
 
     /**
