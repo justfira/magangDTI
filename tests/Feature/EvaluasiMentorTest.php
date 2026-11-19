@@ -359,4 +359,63 @@ class EvaluasiMentorTest extends TestCase
         $this->assertSame('evaluasi_peserta', $notif->jenis_entitas);
         $this->assertSame($evaluasi->id_evaluasi, $notif->id_entitas);
     }
+
+    public function test_mentor_dapat_menyaring_daftar_evaluasi_berdasarkan_pencarian_jalur_dan_status(): void
+    {
+        $p1 = $this->buatPeserta('DTI-FLT-1', 'DTI', $this->mentor1, 'Aktif', 'Budi Santoso DTI');
+        EvaluasiPeserta::create([
+            'id_peserta_magang' => $p1->id_peserta_magang,
+            'status_evaluasi' => 'Memenuhi',
+            'waktu_evaluasi' => now()->subHour(),
+        ]);
+
+        $this->buatPeserta('INST-FLT-2', 'INSTITUSI', $this->mentor1, 'Aktif', 'Citra SMK');
+
+        $p3 = $this->buatPeserta('INST-FLT-3', 'INSTITUSI', $this->mentor1, 'Aktif', 'Nadia Poltek');
+        EvaluasiPeserta::create([
+            'id_peserta_magang' => $p3->id_peserta_magang,
+            'status_evaluasi' => 'Sudah Dinilai',
+            'path_dokumen_evaluasi' => 'evaluasi-peserta/nadia.pdf',
+            'waktu_evaluasi' => now(),
+        ]);
+
+        // Filter jalur INSTITUSI
+        $this->actingAs($this->mentor1User)
+            ->get(route('mentor.evaluasi.index', ['jalur' => 'INSTITUSI']))
+            ->assertOk()
+            ->assertSee('Citra SMK')
+            ->assertSee('Nadia Poltek')
+            ->assertDontSee('Budi Santoso DTI');
+
+        // Filter status Belum Dievaluasi
+        $this->actingAs($this->mentor1User)
+            ->get(route('mentor.evaluasi.index', ['status' => 'Belum Dievaluasi']))
+            ->assertOk()
+            ->assertSee('Citra SMK')
+            ->assertDontSee('Budi Santoso DTI')
+            ->assertDontSee('Nadia Poltek');
+
+        // Filter status Memenuhi
+        $this->actingAs($this->mentor1User)
+            ->get(route('mentor.evaluasi.index', ['status' => 'Memenuhi']))
+            ->assertOk()
+            ->assertSee('Budi Santoso DTI')
+            ->assertDontSee('Citra SMK')
+            ->assertDontSee('Nadia Poltek');
+
+        // Filter pencarian nama
+        $this->actingAs($this->mentor1User)
+            ->get(route('mentor.evaluasi.index', ['cari' => 'Nadia']))
+            ->assertOk()
+            ->assertSee('Nadia Poltek')
+            ->assertDontSee('Citra SMK')
+            ->assertDontSee('Budi Santoso DTI');
+
+        // Filter tanpa hasil tetap mempertahankan ringkasan total peserta
+        $this->actingAs($this->mentor1User)
+            ->get(route('mentor.evaluasi.index', ['cari' => 'TidakAdaNamaIni']))
+            ->assertOk()
+            ->assertSee('Tidak ada peserta yang cocok.')
+            ->assertViewHas('ringkasan', fn (array $r) => ($r['total'] ?? null) === 3);
+    }
 }
