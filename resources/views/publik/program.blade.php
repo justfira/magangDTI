@@ -65,6 +65,25 @@
                 </div>
                 <p class="publik-mono-baris">&gt; tiga bidang menanti kontribusimu<span class="publik-kursor" aria-hidden="true"></span></p>
             </div>
+            <aside class="publik-panel" aria-label="Ringkasan program">
+                <div class="publik-panel-kepala">
+                    <span class="publik-panel-angka">{{ $program->count() }}</span>
+                    <span>program magang<br>sedang dibuka</span>
+                </div>
+                <ul class="publik-panel-daftar">
+                    @forelse ($program->take(3) as $p)
+                        <li><x-ikon nama="koper" /><span><b>{{ $p->nama_program }}</b><small>Tutup {{ $p->tanggal_tutup->translatedFormat('d M Y') }}</small></span></li>
+                    @empty
+                        <li class="publik-panel-kosong"><x-ikon nama="jam" /><span>Nantikan pembukaan program berikutnya.</span></li>
+                    @endforelse
+                </ul>
+                <div class="publik-panel-fitur">
+                    <span><x-ikon nama="papan-centang" />Daftar online</span>
+                    <span><x-ikon nama="jam" />Presensi</span>
+                    <span><x-ikon nama="buku" />Logbook</span>
+                    <span><x-ikon nama="medali" />Sertifikat</span>
+                </div>
+            </aside>
         </div>
     </section>
 
@@ -72,34 +91,53 @@
     <section class="publik-bagian publik-bagian--terang" id="program">
         <span class="publik-simpul" aria-hidden="true"></span>
         <div class="publik-wadah publik-reveal">
+            <p class="publik-label">Program dibuka</p>
             <h2 class="publik-h2">Pilih programnya, siapkan <em class="publik-aksen">berkasnya</em>.</h2>
 
             <div class="publik-grid">
                 @forelse ($program as $p)
+                    @php $sisaHari = (int) today()->diffInDays($p->tanggal_tutup->copy()->startOfDay(), false); @endphp
                     <article class="publik-kartu">
+                        <div class="publik-kartu-kepala">
+                            <span class="publik-kartu-ikon"><x-ikon nama="koper" /></span>
+                            <span class="publik-sisa {{ $sisaHari <= 3 ? 'mendesak' : '' }}">{{ $sisaHari === 0 ? 'Ditutup hari ini' : 'Sisa '.$sisaHari.' hari' }}</span>
+                        </div>
                         <h3>{{ $p->nama_program }}</h3>
-                        <p class="publik-kartu-waktu"><b>Pendaftaran:</b> {{ $p->tanggal_buka->translatedFormat('d M Y') }} – {{ $p->tanggal_tutup->translatedFormat('d M Y') }}</p>
+                        <p class="publik-kartu-waktu"><x-ikon nama="kalender" /><span><b>Pendaftaran:</b> {{ $p->tanggal_buka->translatedFormat('d M Y') }} – {{ $p->tanggal_tutup->translatedFormat('d M Y') }}</span></p>
                         @if ($p->informasi)<p class="publik-kartu-info">{{ $p->informasi }}</p>@endif
                         <details class="publik-syarat">
                             <summary>Lihat persyaratan</summary>
                             <div class="publik-syarat-isi">
+                                @if ($p->persyaratan)
+                                    <p style="white-space: pre-line">{{ $p->persyaratan }}</p>
+                                @endif
                                 @if ($p->syaratDokumenProgram->isNotEmpty())
+                                    <p><b>Berkas yang perlu disiapkan:</b></p>
                                     <ul>
                                         @foreach ($p->syaratDokumenProgram->sortBy('urutan') as $syarat)
                                             <li>{{ $syarat->nama_syarat }}</li>
                                         @endforeach
                                     </ul>
                                 @endif
-                                <p class="publik-catatan">Pendaftaran online sedang dalam pengembangan.</p>
+                                @if (! $p->persyaratan && $p->syaratDokumenProgram->isEmpty())
+                                    <p class="publik-catatan">Persyaratan belum dicantumkan.</p>
+                                @endif
                             </div>
                         </details>
+                        <a class="btn publik-kartu-cta" href="{{ route('pendaftaran.create', $p) }}">Daftar Sekarang <x-ikon nama="panah-kanan" /></a>
                     </article>
                 @empty
+                    @isset($galat)
+                    <div class="publik-kosong" role="alert">
+                        <b>{{ $galat }}</b>
+                    </div>
+                    @else
                     <div class="publik-kosong">
                         <svg class="ikon-besar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h16v11H4zM9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M4 13h16"/></svg>
                         <b>Belum ada program rekrutmen yang dibuka</b>
                         Silakan kembali lagi nanti untuk melihat program magang terbaru.
                     </div>
+                    @endisset
                 @endforelse
             </div>
         </div>
@@ -112,6 +150,7 @@
             <path d="M0 212 C 260 158, 520 238, 780 190 C 1040 142, 1240 212, 1440 166" stroke="#ffffff" stroke-opacity=".07" stroke-width="1.5"/>
         </svg>
         <div class="publik-wadah publik-reveal">
+            <p class="publik-label">Bidang magang</p>
             <h2 class="publik-pernyataan">Tiga bidang, <em class="publik-aksen">satu</em> pengalaman magang.</h2>
 
             <ol class="publik-stasiun">
@@ -163,14 +202,17 @@
     <section class="publik-bagian publik-bagian--terang" id="alur">
         <span class="publik-simpul" aria-hidden="true"></span>
         <div class="publik-wadah publik-reveal">
+            <p class="publik-label">Alur magang</p>
             <h2 class="publik-h2">Dua pintu masuk, <em class="publik-aksen">satu</em> proses yang sama.</h2>
 
             <div class="publik-pintu">
                 <div class="publik-jalur">
+                    <span class="publik-kartu-ikon"><x-ikon nama="pengguna" /></span>
                     <h3>Perorangan — Rekrutmen DTI</h3>
                     <p>Calon peserta mengajukan magang secara mandiri pada program rekrutmen yang sedang dibuka.</p>
                 </div>
                 <div class="publik-jalur">
+                    <span class="publik-kartu-ikon kuning"><x-ikon nama="gedung" /></span>
                     <h3>Institusi — Permohonan Surat</h3>
                     <p>Institusi mengajukan permohonan resmi melalui surat, yang dicatat oleh Direktorat; satu permohonan dapat memuat beberapa calon.</p>
                 </div>

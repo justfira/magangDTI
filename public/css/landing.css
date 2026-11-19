@@ -320,3 +320,135 @@
   .publik-footer { grid-template-columns: 1fr; gap: 22px; }
   .guest-lp .topbar .tautan { display: none; }   /* nav anchor disembunyikan di layar sempit */
 }
+
+/* ==========================================================================
+   11. Penyegaran visual v2 — panel hero, kartu program, bidang berkartu
+   ========================================================================== */
+
+/* Hero: dua kolom + cahaya dekoratif */
+.publik-hero { overflow: hidden; isolation: isolate; }
+.publik-hero::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background:
+    radial-gradient(600px 380px at 85% 30%, rgba(237, 209, 48, .20), transparent 65%),
+    radial-gradient(500px 400px at 10% 100%, rgba(2, 154, 76, .35), transparent 70%);
+}
+.publik-hero::after {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, .05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, .05) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse at 70% 40%, #000 0%, transparent 70%);
+}
+.publik-hero-grid {
+  display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(300px, .9fr);
+  align-items: center; gap: clamp(28px, 5vw, 64px);
+}
+.publik-panel {
+  position: relative;
+  padding: 24px; border-radius: 24px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, .14), rgba(255, 255, 255, .05));
+  border: 1px solid rgba(255, 255, 255, .18);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 30px 70px -30px rgba(0, 0, 0, .55);
+  color: #fff;
+}
+.publik-panel::before {
+  content: ""; position: absolute; top: -14px; right: 26px;
+  width: 64px; height: 64px; border-radius: 18px; z-index: -1;
+  background: var(--kuning); opacity: .9; transform: rotate(12deg);
+  box-shadow: 0 16px 30px -10px rgba(237, 209, 48, .6);
+}
+.publik-panel-kepala { display: flex; align-items: center; gap: 14px; padding-bottom: 18px; border-bottom: 1px solid rgba(255, 255, 255, .14); }
+.publik-panel-kepala span:last-child { font-size: 14px; line-height: 1.35; color: rgba(255, 255, 255, .8); }
+.publik-panel-angka { font-family: var(--display); font-size: 56px; font-weight: 600; line-height: 1; color: var(--kuning); }
+.publik-panel-daftar { list-style: none; margin: 16px 0; padding: 0; display: grid; gap: 10px; }
+.publik-panel-daftar li {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 14px;
+  background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .1);
+}
+.publik-panel-daftar .ikon { width: 18px; height: 18px; color: var(--kuning); flex-shrink: 0; }
+.publik-panel-daftar b { display: block; font-size: 14px; font-weight: 600; color: #fff; }
+.publik-panel-daftar small { font-size: 12px; color: rgba(255, 255, 255, .6); }
+.publik-panel-kosong span { font-size: 13.5px; color: rgba(255, 255, 255, .78); }
+.publik-panel-fitur { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.publik-panel-fitur span { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: rgba(255, 255, 255, .78); }
+.publik-panel-fitur .ikon { width: 15px; height: 15px; color: var(--kuning); }
+
+/* Label kecil di atas judul section */
+.publik-label {
+  display: inline-flex; align-items: center; gap: 10px; margin: 0 0 12px;
+  font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--utama-tua);
+}
+.publik-label::before { content: ""; width: 26px; height: 2px; border-radius: 2px; background: var(--kuning); }
+.publik-bagian--gelap .publik-label { color: var(--kuning); }
+.publik-bagian--terang .publik-h2 { margin-bottom: 30px; }
+
+/* Kartu program */
+.publik-kartu {
+  position: relative; overflow: hidden;
+  border-radius: 22px; border-color: rgba(72, 70, 46, .08);
+  transition: transform .3s var(--mulus), box-shadow .3s;
+}
+.publik-kartu::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px;
+  background: linear-gradient(90deg, var(--utama), var(--kuning));
+}
+.publik-kartu:hover { transform: translateY(-4px); box-shadow: var(--bayangan-angkat); }
+.publik-kartu-kepala { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.publik-kartu-ikon {
+  width: 46px; height: 46px; display: grid; place-items: center; border-radius: 14px;
+  background: linear-gradient(135deg, var(--hijau-muda), var(--floral)); color: var(--utama-tua);
+}
+.publik-kartu-ikon.kuning { background: var(--kuning-muda); color: var(--peringatan); }
+.publik-kartu-ikon .ikon { width: 22px; height: 22px; }
+.publik-sisa {
+  padding: 5px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+  background: var(--hijau-muda); color: var(--utama-tua);
+}
+.publik-sisa.mendesak { background: var(--kuning-muda); color: var(--peringatan); }
+.publik-kartu-waktu { display: flex; align-items: flex-start; gap: 8px; }
+.publik-kartu-waktu .ikon { width: 16px; height: 16px; margin-top: 2px; color: var(--utama); }
+.publik-syarat summary { border-width: 1px; border-color: var(--garis-kuat); border-radius: 12px; }
+.publik-kartu-cta { align-self: stretch; margin-top: 4px; }
+
+/* Bidang: tiga kartu kaca */
+.publik-stasiun { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.publik-stasiun::before { display: none; }
+.publik-stasiun li {
+  flex-direction: column; align-items: flex-start; gap: 18px;
+  padding: 28px 26px; border-radius: 22px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .03));
+  border: 1px solid rgba(255, 255, 255, .12);
+  transition: transform .3s var(--mulus), border-color .3s, background .3s;
+}
+.publik-stasiun li:last-child { padding-bottom: 28px; }
+.publik-stasiun li:hover { transform: translateY(-4px); border-color: rgba(237, 209, 48, .4); background: linear-gradient(160deg, rgba(255, 255, 255, .13), rgba(255, 255, 255, .04)); }
+.publik-node { display: none; }
+.publik-stasiun-no {
+  display: inline-block; padding: 4px 10px; border-radius: 999px; margin-bottom: 12px;
+  background: rgba(237, 209, 48, .15); color: var(--kuning);
+}
+.publik-motif { order: -1; margin-left: 0; width: 120px; }
+
+/* Jalur & fase */
+.publik-jalur { border-radius: 20px; padding: 24px; box-shadow: var(--bayangan); border-color: rgba(72, 70, 46, .08); }
+.publik-jalur .publik-kartu-ikon { margin-bottom: 14px; }
+.publik-fase { counter-reset: fase; }
+.publik-fase li { counter-increment: fase; padding-top: 52px; }
+.publik-fase li::before {
+  content: counter(fase); width: 40px; height: 40px; top: 0;
+  display: grid; place-items: center;
+  font-family: var(--display); font-size: 17px; font-weight: 600; color: #fff;
+  background: linear-gradient(135deg, var(--utama), var(--utama-pekat));
+  border: 3px solid var(--floral); box-shadow: 0 0 0 1.5px var(--utama), 0 10px 20px -8px rgba(3, 122, 59, .55);
+}
+.publik-fase::before { top: 20px; background: linear-gradient(90deg, var(--utama), var(--kuning)); height: 2px; }
+
+@media (max-width: 1023px) {
+  .publik-hero-grid { grid-template-columns: 1fr; }
+  .publik-panel { max-width: 520px; }
+  .publik-stasiun { grid-template-columns: 1fr; }
+}
