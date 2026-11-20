@@ -44,6 +44,10 @@ return [
         ['label' => 'Logbook', 'route' => 'peserta.logbook.index'],
         ['label' => 'Sertifikat', 'route' => 'peserta.sertifikat.index'],
     ],
+    'PESERTA_SELESAI' => [
+        ['label' => 'Dashboard', 'route' => 'dashboard'],
+        ['label' => 'Sertifikat', 'route' => 'peserta.sertifikat.index'],
+    ],
     'CALON' => [
         ['label' => 'Dashboard', 'route' => 'dashboard'],
         ['label' => 'Status Pendaftaran', 'route' => 'peserta.pendaftaran.index'],
