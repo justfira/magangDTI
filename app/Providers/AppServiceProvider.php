@@ -23,7 +23,9 @@ class AppServiceProvider extends ServiceProvider
             $pengguna = auth()->user();
             $kunci = $pengguna?->kodePeran();
             if ($kunci === Peran::PESERTA && ! $pengguna->pesertaMagangBerjalan()) {
-                $kunci = 'CALON';
+                $kunci = $pengguna->pesertaMagang()->where('status_magang', 'Selesai')->exists()
+                    ? 'PESERTA_SELESAI'
+                    : 'CALON';
             }
             $view->with('menu', config("menu.$kunci", []));
             $view->with('jumlahNotifikasi', $pengguna ? $pengguna->notifikasi()->where('sudah_dibaca', false)->count() : 0);

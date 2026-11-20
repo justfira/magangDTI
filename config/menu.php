@@ -8,6 +8,7 @@ return [
         ['label' => 'Permohonan Institusi', 'route' => 'superadmin.permohonan.index'],
         ['label' => 'Verifikasi Pengajuan', 'route' => 'superadmin.verifikasi.index'],
         ['label' => 'Manajemen Akun', 'route' => 'superadmin.akun.index'],
+        ['label' => 'Hak Akses', 'route' => 'superadmin.hak-akses'],
         ['label' => 'Aktivasi Peserta', 'route' => 'superadmin.akun.diterima'],
         ['label' => 'Kelola Presensi', 'route' => 'superadmin.presensi.index'],
         ['label' => 'Sertifikat', 'route' => 'superadmin.sertifikat.index'],
@@ -41,6 +42,10 @@ return [
         ['label' => 'Presensi', 'route' => 'peserta.presensi.index'],
         ['label' => 'Izin & Presensi Susulan', 'route' => 'peserta.kehadiran.index'],
         ['label' => 'Logbook', 'route' => 'peserta.logbook.index'],
+        ['label' => 'Sertifikat', 'route' => 'peserta.sertifikat.index'],
+    ],
+    'PESERTA_SELESAI' => [
+        ['label' => 'Dashboard', 'route' => 'dashboard'],
         ['label' => 'Sertifikat', 'route' => 'peserta.sertifikat.index'],
     ],
     'CALON' => [

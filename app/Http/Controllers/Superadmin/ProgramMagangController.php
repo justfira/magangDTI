@@ -10,13 +10,21 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Throwable;
 
 /**
- * UC-02 Mengelola Program Magang (Superadmin) — SUDAH DIIMPLEMENTASIKAN.
+ * UC-02 Mengelola Program Magang (Superadmin) — SELESAI.
  * Dipakai juga sebagai CONTOH POLA untuk modul lain: index -> form -> validasi -> simpan (transaksi) -> notifikasi sukses.
+ *
+ * Alur: A1 (data/periode tidak valid) ditangani validasi; E1 (gagal simpan, mis. koneksi database) ditangani
+ * di method simpan() — data tidak tersimpan dan pesan error ditampilkan.
  */
 class ProgramMagangController extends Controller
 {
+    private const PESAN_SUKSES = 'Program berhasil disimpan.';
+    private const PESAN_GAGAL = 'Gagal menyimpan program, silakan coba lagi.';
+    private const PESAN_TIDAK_VALID = 'Data belum lengkap atau periode tidak valid.';
+
     public function index(): View
     {
         $program = ProgramMagang::withCount(['syaratDokumenProgram', 'pengajuan'])->latest('id_program')->paginate(10);
@@ -32,14 +40,18 @@ class ProgramMagangController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validasi($request);
+        $pegawai = $this->pegawaiLogin();
+        if (! $pegawai) {
+            return back()->withInput()->with('gagal', 'Akun Anda belum terdaftar sebagai pegawai, hubungi Superadmin.');
+        }
 
-        DB::transaction(function () use ($data, $request) {
-            $program = ProgramMagang::create($data + ['dibuat_oleh' => $this->pegawaiLogin()->id_pegawai]);
-            $this->simpanSyarat($program, $request->input('syarat_baru'));
+        return $this->simpan(function () use ($data, $request, $pegawai) {
+            DB::transaction(function () use ($data, $request, $pegawai) {
+                $program = ProgramMagang::create($data + ['dibuat_oleh' => $pegawai->id_pegawai]);
+                $this->simpanSyarat($program, $request->input('syarat_baru'));
+            });
+            Log::channel('aktivitas')->info('program_dibuat', ['nama' => $data['nama_program'], 'oleh' => auth()->id()]);
         });
-        Log::channel('aktivitas')->info('program_dibuat', ['nama' => $data['nama_program'], 'oleh' => auth()->id()]);
-
-        return redirect()->route('superadmin.program-magang.index')->with('sukses', 'Program berhasil disimpan.');
     }
 
     public function edit(ProgramMagang $programMagang): View
@@ -51,13 +63,27 @@ class ProgramMagangController extends Controller
     {
         $data = $this->validasi($request);
 
-        DB::transaction(function () use ($data, $request, $programMagang) {
-            $programMagang->update($data);
-            $this->simpanSyarat($programMagang, $request->input('syarat_baru'));
+        return $this->simpan(function () use ($data, $request, $programMagang) {
+            DB::transaction(function () use ($data, $request, $programMagang) {
+                $programMagang->update($data);
+                $this->simpanSyarat($programMagang, $request->input('syarat_baru'));
+            });
+            Log::channel('aktivitas')->info('program_diubah', ['id_program' => $programMagang->id_program, 'oleh' => auth()->id()]);
         });
-        Log::channel('aktivitas')->info('program_diubah', ['id_program' => $programMagang->id_program, 'oleh' => auth()->id()]);
+    }
 
-        return redirect()->route('superadmin.program-magang.index')->with('sukses', 'Program berhasil disimpan.');
+    /** E1: jika penyimpanan gagal (mis. koneksi database bermasalah), transaksi dibatalkan dan form tetap terisi. */
+    private function simpan(callable $aksi): RedirectResponse
+    {
+        try {
+            $aksi();
+        } catch (Throwable $e) {
+            report($e);
+
+            return back()->withInput()->with('gagal', self::PESAN_GAGAL);
+        }
+
+        return redirect()->route('superadmin.program-magang.index')->with('sukses', self::PESAN_SUKSES);
     }
 
     /** UC-02 langkah 6 / A1: data wajib & tanggal tutup tidak lebih awal dari tanggal buka. */
@@ -71,8 +97,11 @@ class ProgramMagangController extends Controller
             'persyaratan' => ['nullable', 'string'],
             'status_publikasi' => ['required', Rule::in(ProgramMagang::STATUS)],
         ], [
+            'required' => self::PESAN_TIDAK_VALID,
+            'date' => self::PESAN_TIDAK_VALID,
+            'in' => self::PESAN_TIDAK_VALID,
+            'max' => self::PESAN_TIDAK_VALID,
             'tanggal_tutup.after_or_equal' => 'Data belum lengkap atau periode tidak valid: tanggal tutup tidak boleh lebih awal dari tanggal buka.',
-            'required' => 'Data belum lengkap atau periode tidak valid.',
         ]);
     }
 
