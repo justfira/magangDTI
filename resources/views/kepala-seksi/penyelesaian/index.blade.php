@@ -16,13 +16,19 @@
 @if ($peserta->isEmpty())
     <div class="kosong">
         <b>Belum ada peserta</b>
-        Tidak ada peserta {{ $tab === 'selesai' ? 'yang sudah selesai' : 'yang sedang magang' }} di seksi Anda.
+        @if ($tab === 'ditinjau')
+            Tidak ada peserta yang masa magangnya sudah berakhir atau berakhir dalam {{ $hariMenjelang }} hari.
+        @elseif ($tab === 'selesai')
+            Tidak ada peserta yang sudah selesai di seksi Anda.
+        @else
+            Tidak ada peserta yang sedang magang di seksi Anda.
+        @endif
     </div>
 @else
 <table>
     <thead>
         <tr>
-            <th>Peserta</th><th>Periode</th><th>Mentor</th><th>Tugas</th><th>Hadir</th>
+            <th>Peserta</th><th>Mentor</th><th>Tanggal Selesai</th><th>Penanda</th><th>Tugas</th><th>Hadir</th>
             <th>Logbook</th><th>Evaluasi</th><th>Penyelesaian</th><th></th>
         </tr>
     </thead>
@@ -33,8 +39,18 @@
                 <b>{{ $p->pengguna?->nama_lengkap ?? '-' }}</b><br>
                 <small class="redup">{{ $p->keputusan?->calon?->institusi_asal ?? '-' }}</small>
             </td>
-            <td>{{ $p->tanggal_mulai?->format('d/m/Y') ?? '-' }} – {{ $p->tanggal_selesai?->format('d/m/Y') ?? '-' }}</td>
             <td>{{ $p->mentor?->pengguna?->nama_lengkap ?? 'Belum ditetapkan' }}</td>
+            <td>
+                {{ $p->tanggal_selesai?->format('d/m/Y') ?? '-' }}<br>
+                <small class="redup">mulai {{ $p->tanggal_mulai?->format('d/m/Y') ?? '-' }}</small>
+            </td>
+            <td>
+                @if ($tanda = $penanda[$p->id_peserta_magang] ?? null)
+                    <span class="status {{ $tanda[0] }}">{{ $tanda[1] }}</span>
+                @else
+                    <span class="redup">-</span>
+                @endif
+            </td>
             <td>{{ $p->tugas_selesai_count }}/{{ $p->tugas_count }}</td>
             <td>{{ $p->presensi_count }} hari</td>
             <td>{{ $p->logbook_disetujui_count }}/{{ $p->logbook_count }}</td>
@@ -54,5 +70,9 @@
 {{ $peserta->links() }}
 @endif
 </div>
-<p class="petunjuk">Tugas dan logbook ditampilkan sebagai jumlah selesai/disetujui dari total. Hadir = jumlah hari presensi tercatat.</p>
+<p class="petunjuk">
+    Diurutkan menurut tanggal selesai magang (yang sudah lewat/terdekat di atas). Penanda dihitung dari tanggal hari ini;
+    peserta yang menunggu keputusan Direktur atau sudah disetujui tidak diberi penanda.
+    Tugas dan logbook ditampilkan sebagai jumlah selesai/disetujui dari total. Hadir = jumlah hari presensi tercatat.
+</p>
 @endsection
