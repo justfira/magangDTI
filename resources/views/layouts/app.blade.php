@@ -6,6 +6,7 @@
     <title>@yield('judul', 'Dashboard') — {{ config('app.name') }}</title>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-unand.png') }}">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    @stack('css')
 </head>
 <body>
 @php

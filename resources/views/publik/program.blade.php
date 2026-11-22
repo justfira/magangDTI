@@ -11,6 +11,7 @@
     <a class="tautan" href="#program">Program</a>
     <a class="tautan" href="#bidang">Bidang</a>
     <a class="tautan" href="#alur">Alur</a>
+    <a class="tautan" href="{{ route('publik.permohonan.create') }}">Institusi</a>
     @auth
         <a class="btn btn-garis" href="{{ route('dashboard') }}">Dashboard</a>
     @else
@@ -32,6 +33,7 @@
             <a href="#program">Program dibuka</a>
             <a href="#bidang">Tiga bidang</a>
             <a href="#alur">Alur magang</a>
+            <a href="{{ route('publik.permohonan.create') }}">Permohonan institusi</a>
         </nav>
         <nav class="publik-footer-kolom" aria-label="Akses aplikasi">
             <p class="publik-footer-judul">Akses</p>
@@ -214,7 +216,8 @@
                 <div class="publik-jalur">
                     <span class="publik-kartu-ikon kuning"><x-ikon nama="gedung" /></span>
                     <h3>Institusi — Permohonan Surat</h3>
-                    <p>Institusi mengajukan permohonan resmi melalui surat, yang dicatat oleh Direktorat; satu permohonan dapat memuat beberapa calon.</p>
+                    <p>Institusi mengajukan permohonan resmi melalui surat — bisa diisi online lewat formulir; satu permohonan dapat memuat beberapa calon.</p>
+                    <a class="publik-jalur-cta" href="{{ route('publik.permohonan.create') }}">Ajukan permohonan institusi <x-ikon nama="panah-kanan" /></a>
                 </div>
             </div>
 
