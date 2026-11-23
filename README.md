@@ -342,7 +342,7 @@ Pull Request digunakan sebagai mekanisme pemeriksaan perubahan sebelum kode diga
 
 **Organisasi/Tim:** Kelompok 12
 
-**Mata Kuliah:** Pengembangan dan Pengelolaan Sistem Informasi (PPSI)
+**Mata Kuliah:** Project Pengembangam Sistem Informasi (PPSI)
 
 **Status Proyek:** Dalam Pengembangan
 
