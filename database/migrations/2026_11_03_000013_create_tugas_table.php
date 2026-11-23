@@ -14,6 +14,8 @@ return new class extends Migration
             $table->string('judul', 180);
             $table->text('deskripsi')->nullable();
             $table->date('tenggat');
+            $table->unsignedTinyInteger('jumlah_progres')->default(1)->comment('Jumlah target progres yang ditentukan mentor saat membuat tugas');
+            $table->json('judul_progres')->nullable()->comment('Daftar judul untuk tiap tahapan progres dalam format JSON');
             $table->string('status', 30)->default('Ditugaskan');
             $table->timestamp('created_at')->nullable();
             $table->foreign('id_peserta_magang')->references('id_peserta_magang')->on('peserta_magang')->restrictOnDelete();

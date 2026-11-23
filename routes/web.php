@@ -29,6 +29,12 @@ Route::middleware(['auth', 'akun.aktif'])->group(function () {
     Route::post('/notifikasi/baca-semua', [Controllers\NotifikasiController::class, 'bacaSemua'])->name('notifikasi.baca-semua');
     Route::post('/notifikasi/{notifikasi}/baca', [Controllers\NotifikasiController::class, 'baca'])->name('notifikasi.baca');
 
+    // Berkas tugas berotentikasi (Mentor & Peserta) (UC-07)
+    Route::get('/tugas/progres/{progres}/berkas', [Controllers\TugasBerkasController::class, 'unduh'])->name('tugas.progres.berkas');
+
+    // Berkas dokumen pengajuan pendaftaran berotentikasi (UC-03 / UC-05)
+    Route::get('/pengajuan/dokumen/{dokumen}/unduh', [Controllers\Peserta\DokumenPengajuanController::class, 'unduh'])->name('pengajuan.dokumen.unduh');
+
     // ===== Superadmin
     Route::middleware('peran:SUPERADMIN')->group(function () {
         Route::resource('superadmin/program-magang', Controllers\Superadmin\ProgramMagangController::class)

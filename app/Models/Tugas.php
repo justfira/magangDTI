@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Tabel `tugas` — Tugas perorangan dari mentor peserta (UC-07).
@@ -24,13 +23,17 @@ class Tugas extends Model
         'judul',
         'deskripsi',
         'tenggat',
+        'jumlah_progres',
+        'judul_progres',
         'status',
     ];
 
     protected function casts(): array
     {
         return [
-            'tenggat' => 'date'
+            'tenggat' => 'date',
+            'jumlah_progres' => 'integer',
+            'judul_progres' => 'array',
         ];
     }
 
@@ -41,6 +44,36 @@ class Tugas extends Model
 
     public function progresTugas(): HasMany
     {
-        return $this->hasMany(ProgresTugas::class, 'id_tugas', 'id_tugas');
+        return $this->hasMany(ProgresTugas::class, 'id_tugas', 'id_tugas')->orderBy('urutan', 'asc');
+    }
+
+    public function progresTerakhir(): ?ProgresTugas
+    {
+        return $this->progresTugas()->orderByDesc('urutan')->first();
+    }
+
+    public function urutanProgresTerakhir(): int
+    {
+        return (int) ($this->progresTugas()->max('urutan') ?? 0);
+    }
+
+    public function urutanProgresBerikutnya(): int
+    {
+        return $this->urutanProgresTerakhir() + 1;
+    }
+
+    public function apakahBolehKirimProgres(): bool
+    {
+        return in_array($this->status, ['Ditugaskan', 'Perlu Perbaikan'], true);
+    }
+
+    /**
+     * Kembalikan judul progres untuk urutan tertentu.
+     * Jika tidak ada (mis. progres tambahan karena perbaikan), hasilkan label otomatis.
+     */
+    public function judulProgresKe(int $urutan): string
+    {
+        $daftar = $this->judul_progres ?? [];
+        return !empty($daftar[$urutan - 1]) ? $daftar[$urutan - 1] : "Progres ke-{$urutan}";
     }
 }

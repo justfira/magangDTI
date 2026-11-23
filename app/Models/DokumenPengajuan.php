@@ -19,6 +19,34 @@ class DokumenPengajuan extends Model
     public $timestamps = false;
     public const HASIL = ['Sesuai', 'Tidak Sesuai'];
 
+    public const MAKS_UKURAN_KB = 2048;
+    public const MIMES_DOKUMEN = 'pdf';
+    public const MIMES_FOTO = 'jpg,jpeg,png';
+
+    /**
+     * Tentukan apakah syarat ini termasuk foto/pas foto.
+     */
+    public static function isSyaratFoto(string $namaSyarat): bool
+    {
+        return (bool) preg_match('/foto/i', $namaSyarat);
+    }
+
+    /**
+     * Dapatkan aturan mimes berdasarkan nama syarat dokumen.
+     */
+    public static function getMimesUntukSyarat(string $namaSyarat): string
+    {
+        return self::isSyaratFoto($namaSyarat) ? self::MIMES_FOTO : self::MIMES_DOKUMEN;
+    }
+
+    /**
+     * Format teks deskripsi tipe & ukuran berkas untuk tampilan label.
+     */
+    public static function getDeskripsiFormat(string $namaSyarat): string
+    {
+        return self::isSyaratFoto($namaSyarat) ? 'JPG, JPEG, atau PNG (maks. 2 MB)' : 'PDF (maks. 2 MB)';
+    }
+
     protected $fillable = [
         'id_pengajuan',
         'id_syarat',
