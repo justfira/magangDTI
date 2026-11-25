@@ -276,7 +276,7 @@ CREATE TABLE `pengajuan` (
   CONSTRAINT `pengajuan_id_program_foreign` FOREIGN KEY (`id_program`) REFERENCES `program_magang` (`id_program`),
   CONSTRAINT `chk_pengajuan_jalur` CHECK (`jalur` in ('DTI','INSTITUSI')),
   CONSTRAINT `chk_pengajuan_dti` CHECK (`jalur` <> 'DTI' or `id_program` is not null and `diajukan_oleh` is not null),
-  CONSTRAINT `chk_pengajuan_institusi` CHECK (`jalur` <> 'INSTITUSI' or `dicatat_oleh` is not null and `nama_institusi` is not null and `nomor_surat` is not null),
+  CONSTRAINT `chk_pengajuan_institusi` CHECK (`jalur` <> 'INSTITUSI' or `nama_institusi` is not null and `nomor_surat` is not null),
   CONSTRAINT `chk_pengajuan_status` CHECK (`status_pengajuan` in ('Diajukan','Perlu Perbaikan','Lengkap','Selesai Diputuskan')),
   CONSTRAINT `chk_pengajuan_perbaikan` CHECK (`status_pengajuan` <> 'Perlu Perbaikan' or `catatan_perbaikan` is not null)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

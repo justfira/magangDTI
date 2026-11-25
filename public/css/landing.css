@@ -452,3 +452,12 @@
   .publik-panel { max-width: 520px; }
   .publik-stasiun { grid-template-columns: 1fr; }
 }
+
+/* Tautan CTA di kartu jalur Institusi -> /permohonan-institusi (UC-04) */
+.publik-jalur-cta {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 14px;
+  font-size: 14px; font-weight: 600; color: var(--utama-tua); text-decoration: none;
+}
+.publik-jalur-cta .ikon { width: 16px; height: 16px; transition: transform .2s; }
+.publik-jalur-cta:hover { color: var(--utama-pekat); text-decoration: underline; text-underline-offset: 3px; }
+.publik-jalur-cta:hover .ikon { transform: translateX(3px); }

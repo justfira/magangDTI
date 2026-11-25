@@ -21,6 +21,18 @@ Route::middleware('guest')->group(function () {
 Route::get('/daftar/{program}', [Controllers\Pendaftaran\PendaftaranController::class, 'create'])->name('pendaftaran.create');
 Route::post('/daftar/{program}', [Controllers\Pendaftaran\PendaftaranController::class, 'store'])->name('pendaftaran.store');
 
+// ---------- UC-04 sisi publik: landing + form online permohonan magang institusi (tanpa login)
+Route::get('/permohonan-institusi', [Controllers\Publik\PermohonanInstitusiController::class, 'create'])->name('publik.permohonan.create');
+Route::post('/permohonan-institusi', [Controllers\Publik\PermohonanInstitusiController::class, 'store'])->middleware('throttle:5,10')->name('publik.permohonan.store');
+Route::get('/permohonan-institusi/terkirim', [Controllers\Publik\PermohonanInstitusiController::class, 'terkirim'])->name('publik.permohonan.terkirim');
+// Cek status & perbaikan permohonan institusi (tanpa akun): kode permohonan + email narahubung
+Route::get('/permohonan-institusi/cek', [Controllers\Publik\StatusPermohonanController::class, 'cek'])->name('publik.permohonan.cek');
+Route::post('/permohonan-institusi/cek', [Controllers\Publik\StatusPermohonanController::class, 'masuk'])->middleware('throttle:5,10')->name('publik.permohonan.masuk');
+Route::post('/permohonan-institusi/keluar', [Controllers\Publik\StatusPermohonanController::class, 'keluar'])->name('publik.permohonan.keluar');
+Route::get('/permohonan-institusi/status', [Controllers\Publik\StatusPermohonanController::class, 'status'])->name('publik.permohonan.status');
+Route::get('/permohonan-institusi/perbaikan', [Controllers\Publik\StatusPermohonanController::class, 'edit'])->name('publik.permohonan.perbaikan');
+Route::put('/permohonan-institusi/perbaikan', [Controllers\Publik\StatusPermohonanController::class, 'update'])->middleware('throttle:10,10')->name('publik.permohonan.perbaikan.kirim');
+
 // ---------- Semua pengguna yang sudah login
 Route::middleware(['auth', 'akun.aktif'])->group(function () {
     Route::post('/logout', [Controllers\Auth\LoginController::class, 'destroy'])->name('logout');
@@ -29,6 +41,10 @@ Route::middleware(['auth', 'akun.aktif'])->group(function () {
     Route::post('/notifikasi/baca-semua', [Controllers\NotifikasiController::class, 'bacaSemua'])->name('notifikasi.baca-semua');
     Route::post('/notifikasi/{notifikasi}/baca', [Controllers\NotifikasiController::class, 'baca'])->name('notifikasi.baca');
 
+    // ===== UC-05: tautan "Lihat" dokumen persyaratan (Superadmin, Kepala Seksi, Direktur)
+    Route::get('/pengajuan/dokumen/{dokumen}', [Controllers\DokumenPengajuanController::class, 'show'])
+        ->middleware('peran:SUPERADMIN,KEPALA_SEKSI,DIREKTUR')->whereNumber('dokumen')->name('pengajuan.dokumen');
+
     // ===== Superadmin
     Route::middleware('peran:SUPERADMIN')->group(function () {
         Route::resource('superadmin/program-magang', Controllers\Superadmin\ProgramMagangController::class)
@@ -36,6 +52,8 @@ Route::middleware(['auth', 'akun.aktif'])->group(function () {
         Route::get('/superadmin/permohonan-institusi', [Controllers\Superadmin\PermohonanInstitusiController::class, 'index'])->name('superadmin.permohonan.index');
         Route::get('/superadmin/permohonan-institusi/create', [Controllers\Superadmin\PermohonanInstitusiController::class, 'create'])->name('superadmin.permohonan.create');
         Route::post('/superadmin/permohonan-institusi', [Controllers\Superadmin\PermohonanInstitusiController::class, 'store'])->name('superadmin.permohonan.store');
+        Route::get('/superadmin/permohonan-institusi/{pengajuan}', [Controllers\Superadmin\PermohonanInstitusiController::class, 'show'])->whereNumber('pengajuan')->name('superadmin.permohonan.show');
+        Route::get('/superadmin/permohonan-institusi/{pengajuan}/surat', [Controllers\Superadmin\PermohonanInstitusiController::class, 'surat'])->whereNumber('pengajuan')->name('superadmin.permohonan.surat');
         Route::get('/superadmin/verifikasi-pengajuan', [Controllers\Superadmin\VerifikasiPengajuanController::class, 'index'])->name('superadmin.verifikasi.index');
         Route::get('/superadmin/verifikasi-pengajuan/{pengajuan}', [Controllers\Superadmin\VerifikasiPengajuanController::class, 'show'])->name('superadmin.verifikasi.show');
         Route::post('/superadmin/verifikasi-pengajuan/{pengajuan}/periksa', [Controllers\Superadmin\VerifikasiPengajuanController::class, 'periksa'])->name('superadmin.verifikasi.periksa');
