@@ -110,6 +110,7 @@ Route::middleware(['auth', 'akun.aktif'])->group(function () {
     // ===== Calon / Peserta Magang
     Route::middleware('peran:PESERTA')->group(function () {
         Route::get('/peserta/pendaftaran', [Controllers\Peserta\StatusPendaftaranController::class, 'index'])->name('peserta.pendaftaran.index');
+        Route::get('/peserta/pendaftaran/{pengajuan}/cetak', [Controllers\Peserta\StatusPendaftaranController::class, 'cetak'])->name('peserta.pendaftaran.cetak');
         Route::get('/peserta/pendaftaran/{pengajuan}/perbaikan', [Controllers\Peserta\StatusPendaftaranController::class, 'edit'])->name('peserta.pendaftaran.edit');
         Route::put('/peserta/pendaftaran/{pengajuan}/perbaikan', [Controllers\Peserta\StatusPendaftaranController::class, 'update'])->name('peserta.pendaftaran.update');
         Route::get('/peserta/penempatan', [Controllers\Peserta\PenempatanController::class, 'show'])->name('peserta.penempatan');

@@ -63,6 +63,30 @@ class PendaftaranRequest extends FormRequest
         return $rules;
     }
 
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $program = $this->route('program');
+            if (! $program instanceof ProgramMagang) {
+                $program = ProgramMagang::find($program);
+            }
+
+            $nim = trim((string) $this->input('nomor_induk_pendidikan'));
+            if ($program && $nim !== '') {
+                $sudahTerdaftar = \App\Models\CalonPeserta::where('nomor_induk_pendidikan', $nim)
+                    ->whereHas('pengajuan', fn ($q) => $q->where('id_program', $program->id_program))
+                    ->exists();
+
+                if ($sudahTerdaftar) {
+                    $validator->errors()->add(
+                        'nomor_induk_pendidikan',
+                        'NIM / Nomor Induk Pendidikan ini sudah terdaftar pada program magang yang sama.'
+                    );
+                }
+            }
+        });
+    }
+
     public function messages(): array
     {
         return [

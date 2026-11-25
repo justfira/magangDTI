@@ -490,4 +490,104 @@ class PendaftaranRekrutmenTest extends TestCase
         $this->get(route('pengajuan.dokumen.unduh', $dokumen))
             ->assertRedirect(route('login'));
     }
+
+    public function test_validasi_nim_duplikat_pada_program_yang_sama(): void
+    {
+        $peranPeserta = Peran::where('kode_peran', \App\Support\Peran::PESERTA)->value('id_peran');
+
+        $peserta1 = Pengguna::create([
+            'id_peran' => $peranPeserta,
+            'nama_lengkap' => 'Rani Pertama',
+            'email' => 'rani1@dti.test',
+            'password_hash' => Hash::make('password'),
+            'status_akun' => 'Aktif',
+        ]);
+
+        $pengajuan = Pengajuan::create([
+            'id_program' => $this->program->id_program,
+            'diajukan_oleh' => $peserta1->id_pengguna,
+            'kode_pengajuan' => 'DTI-2026-0001',
+            'jalur' => 'DTI',
+            'status_pengajuan' => 'Diajukan',
+            'tanggal_pengajuan' => now(),
+        ]);
+
+        CalonPeserta::create([
+            'id_pengajuan' => $pengajuan->id_pengajuan,
+            'nama_lengkap' => 'Rani Pertama',
+            'email' => 'rani1@dti.test',
+            'no_hp' => '08123456789',
+            'nomor_induk_pendidikan' => '2311521001',
+            'institusi_asal' => 'Universitas Andalas',
+            'jurusan_prodi' => 'Sistem Informasi',
+        ]);
+
+        // Daftar lagi dengan email baru, tapi NIM sama pada program yang sama -> ditolak
+        $response = $this->post(route('pendaftaran.store', $this->program), [
+            'nama_lengkap' => 'Rani Kedua',
+            'email' => 'rani2@dti.test',
+            'password' => 'rahasia123',
+            'password_confirmation' => 'rahasia123',
+            'no_hp' => '081299998888',
+            'nomor_induk_pendidikan' => '2311521001',
+            'institusi_asal' => 'Universitas Andalas',
+            'jurusan_prodi' => 'Sistem Informasi',
+            'dokumen' => [
+                $this->syaratPdf->id_syarat => UploadedFile::fake()->create('cv.pdf', 100, 'application/pdf'),
+                $this->syaratFoto->id_syarat => UploadedFile::fake()->image('foto.jpg', 300, 400),
+            ],
+        ]);
+
+        $response->assertSessionHasErrors('nomor_induk_pendidikan');
+        $this->assertDatabaseMissing('pengguna', ['email' => 'rani2@dti.test']);
+    }
+
+    public function test_peserta_dapat_mencetak_bukti_pendaftaran_milik_sendiri(): void
+    {
+        $peranPeserta = Peran::where('kode_peran', \App\Support\Peran::PESERTA)->value('id_peran');
+
+        $pemilik = Pengguna::create([
+            'id_peran' => $peranPeserta,
+            'nama_lengkap' => 'Rani Putri',
+            'email' => 'rani@dti.test',
+            'password_hash' => Hash::make('password'),
+            'status_akun' => 'Aktif',
+        ]);
+
+        $pesertaLain = Pengguna::create([
+            'id_peran' => $peranPeserta,
+            'nama_lengkap' => 'Budi Lain',
+            'email' => 'budi@dti.test',
+            'password_hash' => Hash::make('password'),
+            'status_akun' => 'Aktif',
+        ]);
+
+        $pengajuan = Pengajuan::create([
+            'id_program' => $this->program->id_program,
+            'diajukan_oleh' => $pemilik->id_pengguna,
+            'kode_pengajuan' => 'DTI-2026-0099',
+            'jalur' => 'DTI',
+            'status_pengajuan' => 'Diajukan',
+            'tanggal_pengajuan' => now(),
+        ]);
+
+        CalonPeserta::create([
+            'id_pengajuan' => $pengajuan->id_pengajuan,
+            'nama_lengkap' => 'Rani Putri',
+            'email' => 'rani@dti.test',
+            'no_hp' => '08123456789',
+            'nomor_induk_pendidikan' => '2311521001',
+            'institusi_asal' => 'Universitas Andalas',
+            'jurusan_prodi' => 'Sistem Informasi',
+        ]);
+
+        $this->actingAs($pemilik)->get(route('peserta.pendaftaran.cetak', $pengajuan))
+            ->assertOk()
+            ->assertSee('Bukti Pendaftaran Rekrutmen Magang')
+            ->assertSee('DTI-2026-0099')
+            ->assertSee('Rani Putri');
+
+        $this->actingAs($pesertaLain)->get(route('peserta.pendaftaran.cetak', $pengajuan))
+            ->assertForbidden();
+    }
 }

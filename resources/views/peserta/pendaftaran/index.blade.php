@@ -44,8 +44,11 @@
                         <p>Kode Pengajuan: <b>{{ $pengajuan->kode_pengajuan }}</b> · Diajukan pada {{ $pengajuan->tanggal_pengajuan?->translatedFormat('d F Y, H:i') ?? '-' }} WIB</p>
                     </div>
                 </div>
-                <div>
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                     <span class="status {{ $statusClass }}">{{ $pengajuan->status_pengajuan }}</span>
+                    <a href="{{ route('peserta.pendaftaran.cetak', $pengajuan) }}" target="_blank" class="btn btn-garis btn-kecil" title="Cetak atau simpan bukti pendaftaran sebagai PDF">
+                        <x-ikon nama="berkas" /> Cetak Bukti Pendaftaran
+                    </a>
                 </div>
             </div>
 

@@ -40,6 +40,22 @@ class StatusPendaftaranController extends Controller
     }
 
     /**
+     * Cetak Bukti Pendaftaran — GET /peserta/pendaftaran/{pengajuan}/cetak
+     */
+    public function cetak(Request $request, Pengajuan $pengajuan): View
+    {
+        abort_unless($pengajuan->diajukan_oleh === $request->user()->id_pengguna, 403, 'Anda tidak memiliki akses ke pengajuan ini.');
+
+        $pengajuan->load([
+            'program',
+            'dokumenPengajuan',
+            'calonPeserta.keputusanPenerimaan',
+        ]);
+
+        return view('peserta.pendaftaran.cetak', compact('pengajuan'));
+    }
+
+    /**
      * Form Perbaikan Pendaftaran — GET /peserta/pendaftaran/{pengajuan}/perbaikan
      */
     public function edit(Request $request, Pengajuan $pengajuan): View
