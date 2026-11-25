@@ -39,7 +39,7 @@
     <div style="margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; background: var(--permukaan-2); padding: 14px 18px; border-radius: var(--radius-kecil); margin-bottom: 16px;">
         <div>
             <span class="redup" style="font-size: 13px; display: block;">Tenggat Waktu:</span>
-            <b><x-ikon nama="kalender" /> {{ $tugas->tenggat?->format('d F Y') }}</b>
+            <b><x-ikon nama="kalender" /> {{ $tugas->tenggat?->format('d F Y, H:i') }} WIB</b>
         </div>
         <div>
             <span class="redup" style="font-size: 13px; display: block;">Target Progres:</span>
@@ -65,9 +65,14 @@
                     <small class="redup">{{ basename($tugas->path_dokumen) }} · Unduh sebagai panduan pengerjaan tugas</small>
                 </div>
             </div>
-            <a href="{{ route('tugas.dokumen', $tugas) }}" class="btn btn-garis btn-kecil">
-                <x-ikon nama="berkas" /> Unduh Dokumen Instruksi
-            </a>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <a href="{{ route('tugas.dokumen', $tugas) }}" target="_blank" class="btn btn-garis btn-kecil" title="Buka dan lihat dokumen instruksi di tab baru">
+                    <x-ikon nama="mata" /> Lihat Dokumen
+                </a>
+                <a href="{{ route('tugas.dokumen', ['tugas' => $tugas, 'unduh' => 1]) }}" class="btn btn-garis btn-kecil" title="Unduh dokumen instruksi">
+                    <x-ikon nama="berkas" /> Unduh
+                </a>
+            </div>
         </div>
     @endif
 
@@ -129,7 +134,18 @@
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap;">
                         <div>
                             <b>Progres ke-{{ $p->urutan }} dari {{ $tugas->jumlah_progres }}: {{ $tugas->judulProgresKe($p->urutan) }}</b>
-                            <small class="redup"><x-ikon nama="kalender" /> Dikirim: {{ $p->waktu_kirim?->format('d M Y, H:i') }}</small>
+                            <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px; flex-wrap: wrap;">
+                                <small class="redup"><x-ikon nama="kalender" /> Dikirim: {{ $p->waktu_kirim?->format('d M Y, H:i') }}</small>
+                                @if ($p->apakahTerlambat())
+                                    <span class="chip" style="background: rgba(239, 68, 68, 0.12); color: var(--gagal); font-weight: 600; font-size: 11.5px; padding: 2px 8px; border-radius: 999px;">
+                                        Terlambat ({{ $p->selisihKeterlambatan() }})
+                                    </span>
+                                @else
+                                    <span class="chip" style="background: rgba(34, 197, 94, 0.12); color: var(--sukses); font-weight: 600; font-size: 11.5px; padding: 2px 8px; border-radius: 999px;">
+                                        Tepat Waktu
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                         <div>
                             @if ($p->hasil_review)
@@ -147,9 +163,14 @@
 
                         <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; font-size: 13.5px; padding-top: 10px; border-top: 1px dashed var(--garis);">
                             @if ($p->path_berkas)
-                                <a href="{{ route('tugas.progres.berkas', $p) }}" class="btn btn-garis btn-kecil">
-                                    <x-ikon nama="berkas" /> Unduh Berkas Bukti ({{ basename($p->path_berkas) }})
-                                </a>
+                                <div style="display: inline-flex; gap: 6px; align-items: center;">
+                                    <a href="{{ route('tugas.progres.berkas', $p) }}" target="_blank" class="btn btn-garis btn-kecil" title="Buka dan lihat berkas di tab baru">
+                                        <x-ikon nama="mata" /> Lihat Bukti ({{ basename($p->path_berkas) }})
+                                    </a>
+                                    <a href="{{ route('tugas.progres.berkas', ['progres' => $p, 'unduh' => 1]) }}" class="btn btn-garis btn-kecil" title="Unduh berkas ke perangkat">
+                                        <x-ikon nama="berkas" /> Unduh
+                                    </a>
+                                </div>
                             @endif
                             @if ($p->tautan_hasil)
                                 <a href="{{ $p->tautan_hasil }}" target="_blank" rel="noopener noreferrer" class="btn btn-garis btn-kecil">
@@ -204,17 +225,24 @@
                 @error('catatan_progres')<span class="pesan-salah">{{ $message }}</span>@enderror
             </label>
 
-            <label>Tautan Hasil (URL)
-                <input type="url" name="tautan_hasil" value="{{ old('tautan_hasil') }}" placeholder="https://github.com/... atau https://drive.google.com/..." required>
-                <small class="redup">Wajib diisi dengan tautan repositori, live demo, atau dokumen hasil pengerjaan.</small>
+            <label>Tautan Hasil (URL / Opsional)
+                <input type="url" name="tautan_hasil" value="{{ old('tautan_hasil') }}" placeholder="https://github.com/... atau https://drive.google.com/...">
+                <small class="redup">Opsional. Masukkan tautan repositori GitHub, Google Drive, atau live demo jika ada.</small>
                 @error('tautan_hasil')<span class="pesan-salah">{{ $message }}</span>@enderror
             </label>
 
-            <label>Berkas Hasil Tugas
-                <input type="file" name="berkas" required>
-                <small class="redup">Wajib diunggah. Format yang didukung: PDF, ZIP, RAR, DOC, DOCX, PNG, JPG, JPEG (Maks. 10 MB).</small>
-                @error('berkas')<span class="pesan-salah">{{ $message }}</span>@enderror
-            </label>
+            <div class="dua-kolom" style="margin-top: 8px;">
+                <label>Berkas Bukti Hasil Tugas <span class="teks-wajib" style="color:var(--gagal)">*</span>
+                    <input type="file" name="berkas" required>
+                    <small class="redup">Format yang didukung: PDF, ZIP, RAR, DOC, DOCX, PNG, JPG (Maks. 10 MB).</small>
+                    @error('berkas')<span class="pesan-salah">{{ $message }}</span>@enderror
+                </label>
+                <label>Nama File Berkas (Opsional)
+                    <input type="text" name="nama_kustom_berkas" value="{{ old('nama_kustom_berkas') }}" maxlength="100" placeholder="mis. Bukti_Modul_C_V1">
+                    <small class="redup">Ubah nama berkas sebelum disimpan jika diinginkan.</small>
+                    @error('nama_kustom_berkas')<span class="pesan-salah">{{ $message }}</span>@enderror
+                </label>
+            </div>
 
             <div class="aksi" style="margin-top: 18px;">
                 <button class="btn" type="submit"><x-ikon nama="centang-saja" /> Kirim Progres</button>

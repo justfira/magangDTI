@@ -18,9 +18,10 @@ class KirimProgresRequest extends FormRequest
         $maxKb = ProgresTugas::MAKS_UKURAN_BERKAS_KB;
 
         return [
-            'catatan_progres' => 'required|string',
-            'tautan_hasil' => 'required|url|max:500',
-            'berkas' => "required|file|mimes:{$mimes}|max:{$maxKb}",
+            'catatan_progres'    => 'required|string',
+            'tautan_hasil'       => 'nullable|url|max:500',
+            'berkas'             => "required|file|mimes:{$mimes}|max:{$maxKb}",
+            'nama_kustom_berkas' => 'nullable|string|max:100',
         ];
     }
 
@@ -28,7 +29,6 @@ class KirimProgresRequest extends FormRequest
     {
         return [
             'catatan_progres.required' => 'Progres atau hasil tugas belum diisi (catatan progres wajib diisi).',
-            'tautan_hasil.required' => 'Progres atau hasil tugas belum diisi (tautan hasil wajib diisi).',
             'tautan_hasil.url' => 'Tautan hasil harus berupa URL yang valid (diawali http:// atau https://).',
             'berkas.required' => 'Progres atau hasil tugas belum diisi (berkas hasil tugas wajib diunggah).',
             'berkas.file' => 'Berkas harus berupa file yang valid.',

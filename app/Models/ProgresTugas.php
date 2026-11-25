@@ -45,4 +45,31 @@ class ProgresTugas extends Model
     {
         return $this->belongsTo(Tugas::class, 'id_tugas', 'id_tugas');
     }
+
+    /**
+     * Cek apakah progres diserahkan melewati batas tenggat tugas.
+     */
+    public function apakahTerlambat(): bool
+    {
+        if (! $this->waktu_kirim || ! $this->tugas?->tenggat) {
+            return false;
+        }
+
+        return $this->waktu_kirim->isAfter($this->tugas->tenggat);
+    }
+
+    /**
+     * Hitung selisih waktu keterlambatan pengumpulan.
+     */
+    public function selisihKeterlambatan(): ?string
+    {
+        if (! $this->apakahTerlambat()) {
+            return null;
+        }
+
+        return $this->waktu_kirim->diffForHumans($this->tugas->tenggat, [
+            'parts' => 2,
+            'syntax' => \Carbon\CarbonInterface::DIFF_ABSOLUTE,
+        ]);
+    }
 }

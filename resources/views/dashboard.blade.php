@@ -132,4 +132,119 @@
         @endforelse
     </div>
 @endisset
+
+@isset($peserta)
+    <div class="kartu" style="margin-top: 20px; background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%); border: 1px solid rgba(37, 99, 235, 0.15);">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <span class="ikon-bulat biru" style="width: 44px; height: 44px; font-size: 18px;"><x-ikon nama="lokasi" /></span>
+                <div>
+                    <span class="redup" style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Penempatan Magang</span>
+                    <h3 style="margin: 2px 0 4px; font-size: 16px;">{{ $peserta->seksi?->nama_seksi ?? 'Direktorat Teknologi Informasi' }}</h3>
+                    <p style="margin: 0; font-size: 13px;" class="redup">
+                        Mentor: <b>{{ $peserta->mentor?->nama_lengkap ?? '-' }}</b> · 
+                        Periode: {{ $peserta->tanggal_mulai?->format('d M Y') }} s/d {{ $peserta->tanggal_selesai?->format('d M Y') }}
+                    </p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <a href="{{ route('peserta.presensi.index') }}" class="btn btn-garis btn-kecil"><x-ikon nama="jam" /> Presensi</a>
+                <a href="{{ route('peserta.logbook.index') }}" class="btn btn-garis btn-kecil"><x-ikon nama="buku" /> Logbook</a>
+            </div>
+        </div>
+    </div>
+
+    {{-- Informasi Tugas & Proyek Peserta --}}
+    <div class="kartu" style="margin-top: 20px;">
+        <div class="kartu-kepala">
+            <div class="kartu-judul">
+                <span class="ikon-bulat kuning"><x-ikon nama="tugas" /></span>
+                <div>
+                    <h2>Daftar Tugas &amp; Proyek Pengerjaan</h2>
+                    <p>Pantau progres pengerjaan tugas, tenggat waktu, dan serahkan hasil pekerjaan kepada mentor.</p>
+                </div>
+            </div>
+            <a class="btn btn-garis btn-kecil" href="{{ route('peserta.tugas.index') }}">
+                <x-ikon nama="panah-kanan" /> Buka Halaman Tugas
+            </a>
+        </div>
+
+        @if ($daftarTugas->isEmpty())
+            <div class="kosong">
+                <div class="ilustrasi"><x-ikon nama="tugas" /></div>
+                <b>Belum Ada Tugas Diberikan</b>
+                Mentor pembimbing Anda belum memberikan tugas. Silakan koordinasikan dengan mentor Anda.
+            </div>
+        @else
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+                @foreach ($daftarTugas as $t)
+                    @php
+                        $urutanAktif = $t->urutanProgresTerakhir();
+                        $persen = $t->jumlah_progres > 0 ? min(100, round(($urutanAktif / $t->jumlah_progres) * 100)) : 0;
+                        $kelasStatus = match ($t->status) {
+                            'Diserahkan' => 'status-peringatan',
+                            'Selesai' => 'status-sukses',
+                            'Perlu Perbaikan' => 'status-gagal',
+                            default => 'status-netral',
+                        };
+                        $hariSisa = now()->startOfDay()->diffInDays($t->tenggat?->startOfDay(), false);
+                    @endphp
+                    <div style="background: var(--permukaan-2); border: 1px solid var(--garis); border-radius: var(--radius-kecil); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                        <div style="flex: 1; min-width: 250px;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">
+                                <span class="status {{ $kelasStatus }}" style="font-size: 11.5px;">{{ $t->status }}</span>
+                                @if ($t->status === 'Selesai' && $t->nilai !== null)
+                                    <span class="chip" style="font-size: 11.5px; font-weight: 700; color: var(--sukses); background: rgba(34, 197, 94, 0.12);">
+                                        <x-ikon nama="medali" style="width: 12px; height: 12px; vertical-align: -1px;" /> Nilai: {{ $t->nilai }} / 100
+                                    </span>
+                                @endif
+                                <span class="redup" style="font-size: 12px;">
+                                    <x-ikon nama="kalender" style="width: 12px; height: 12px; vertical-align: -1px;" /> Tenggat: {{ $t->tenggat?->format('d M Y') }}
+                                    @if ($t->status !== 'Selesai')
+                                        @if ($hariSisa < 0)
+                                            <b style="color: var(--gagal);">(Terlewat {{ abs($hariSisa) }} hari)</b>
+                                        @elseif ($hariSisa === 0)
+                                            <b style="color: var(--peringatan);">(Hari ini)</b>
+                                        @else
+                                            <span>(Sisa {{ $hariSisa }} hari)</span>
+                                        @endif
+                                    @endif
+                                </span>
+                            </div>
+                            <b style="font-size: 15px; color: var(--teks); display: block; margin-bottom: 4px;">{{ $t->judul }}</b>
+                            <p style="margin: 0; font-size: 13px; color: var(--redup); max-width: 550px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $t->deskripsi }}</p>
+
+                            {{-- Progress Bar Mini --}}
+                            <div style="margin-top: 10px; display: flex; align-items: center; gap: 10px;">
+                                <div style="flex: 1; max-width: 220px; height: 6px; background: rgba(0,0,0,0.08); border-radius: 999px; overflow: hidden;">
+                                    <div style="width: {{ $persen }}%; height: 100%; background: {{ $t->status === 'Selesai' ? 'var(--sukses)' : 'var(--aksen)' }}; border-radius: 999px;"></div>
+                                </div>
+                                <span style="font-size: 11.5px; font-weight: 600; color: var(--redup);">
+                                    Tahap {{ $urutanAktif }} dari {{ $t->jumlah_progres }} ({{ $persen }}%)
+                                </span>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            @if ($t->path_dokumen)
+                                <a href="{{ route('tugas.dokumen', $t) }}" target="_blank" class="btn btn-garis btn-kecil" title="Lihat dokumen instruksi dari mentor">
+                                    <x-ikon nama="berkas" /> Modul
+                                </a>
+                            @endif
+                            <a href="{{ route('peserta.tugas.show', $t) }}" class="btn {{ $t->apakahBolehKirimProgres() ? 'btn-kuning' : 'btn-garis' }} btn-kecil">
+                                @if ($t->status === 'Perlu Perbaikan')
+                                    <x-ikon nama="ubah" /> Kirim Revisi
+                                @elseif ($t->apakahBolehKirimProgres())
+                                    <x-ikon nama="plus" /> Kirim Progres
+                                @else
+                                    <x-ikon nama="mata" /> Detail
+                                @endif
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </div>
+@endisset
 @endsection

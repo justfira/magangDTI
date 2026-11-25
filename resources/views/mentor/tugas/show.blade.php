@@ -51,7 +51,7 @@
     <div style="margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; background: var(--permukaan-2); padding: 14px 18px; border-radius: var(--radius-kecil); margin-bottom: 16px;">
         <div>
             <span class="redup" style="font-size: 13px; display: block;">Tenggat Waktu:</span>
-            <b><x-ikon nama="kalender" /> {{ $tugas->tenggat?->format('d F Y') }}</b>
+            <b><x-ikon nama="kalender" /> {{ $tugas->tenggat?->format('d F Y, H:i') }} WIB</b>
         </div>
         <div>
             <span class="redup" style="font-size: 13px; display: block;">Target Progres:</span>
@@ -77,9 +77,14 @@
                     <small class="redup">{{ basename($tugas->path_dokumen) }} · Dapat diunduh oleh peserta bimbingan</small>
                 </div>
             </div>
-            <a href="{{ route('tugas.dokumen', $tugas) }}" class="btn btn-garis btn-kecil">
-                <x-ikon nama="berkas" /> Unduh Dokumen Instruksi
-            </a>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <a href="{{ route('tugas.dokumen', $tugas) }}" target="_blank" class="btn btn-garis btn-kecil" title="Buka dan lihat dokumen instruksi di tab baru">
+                    <x-ikon nama="mata" /> Lihat Dokumen
+                </a>
+                <a href="{{ route('tugas.dokumen', ['tugas' => $tugas, 'unduh' => 1]) }}" class="btn btn-garis btn-kecil" title="Unduh dokumen instruksi">
+                    <x-ikon nama="berkas" /> Unduh
+                </a>
+            </div>
         </div>
     @endif
 
@@ -143,7 +148,18 @@
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap;">
                         <div>
                             <b>Progres ke-{{ $p->urutan }} dari {{ $tugas->jumlah_progres }}: {{ $tugas->judulProgresKe($p->urutan) }}</b>
-                            <small class="redup"><x-ikon nama="kalender" /> Dikirim: {{ $p->waktu_kirim?->format('d M Y, H:i') }}</small>
+                            <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px; flex-wrap: wrap;">
+                                <small class="redup"><x-ikon nama="kalender" /> Dikirim: {{ $p->waktu_kirim?->format('d M Y, H:i') }}</small>
+                                @if ($p->apakahTerlambat())
+                                    <span class="chip" style="background: rgba(239, 68, 68, 0.12); color: var(--gagal); font-weight: 600; font-size: 11.5px; padding: 2px 8px; border-radius: 999px;">
+                                        Terlambat ({{ $p->selisihKeterlambatan() }})
+                                    </span>
+                                @else
+                                    <span class="chip" style="background: rgba(34, 197, 94, 0.12); color: var(--sukses); font-weight: 600; font-size: 11.5px; padding: 2px 8px; border-radius: 999px;">
+                                        Tepat Waktu
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                         <div>
                             @if ($p->hasil_review)
@@ -161,9 +177,14 @@
 
                         <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; font-size: 13.5px; padding-top: 10px; border-top: 1px dashed var(--garis);">
                             @if ($p->path_berkas)
-                                <a href="{{ route('tugas.progres.berkas', $p) }}" class="btn btn-garis btn-kecil">
-                                    <x-ikon nama="berkas" /> Unduh Berkas Bukti ({{ basename($p->path_berkas) }})
-                                </a>
+                                <div style="display: inline-flex; gap: 6px; align-items: center;">
+                                    <a href="{{ route('tugas.progres.berkas', $p) }}" target="_blank" class="btn btn-garis btn-kecil" title="Buka dan lihat berkas di tab baru">
+                                        <x-ikon nama="mata" /> Lihat Bukti ({{ basename($p->path_berkas) }})
+                                    </a>
+                                    <a href="{{ route('tugas.progres.berkas', ['progres' => $p, 'unduh' => 1]) }}" class="btn btn-garis btn-kecil" title="Unduh berkas ke perangkat">
+                                        <x-ikon nama="berkas" /> Unduh
+                                    </a>
+                                </div>
                             @else
                                 <span class="redup" style="font-size: 12.5px; display: inline-flex; align-items: center; gap: 4px;">
                                     <x-ikon nama="info" style="width: 14px; height: 14px;" /> Tidak ada berkas diunggah
@@ -192,13 +213,13 @@
 </div>
 
 @if ($bisaReview)
-    <div class="kartu">
+    <div class="kartu" id="form-review" style="border-left: 4px solid var(--aksen);">
         <div class="kartu-kepala">
             <div class="kartu-judul">
                 <span class="ikon-bulat kuning"><x-ikon nama="papan-centang" /></span>
                 <div>
-                    <h2>Pemeriksaan Progres Terakhir (Progres ke-{{ $progresTerakhir->urutan }})</h2>
-                    <p>Tentukan keputusan hasil pemeriksaan dan berikan umpan balik atau catatan revisi.</p>
+                    <h2>Pemeriksaan Progres ke-{{ $progresTerakhir->urutan }}: {{ $tugas->judulProgresKe($progresTerakhir->urutan) }}</h2>
+                    <p>Tentukan keputusan hasil pemeriksaan dan berikan umpan balik atau catatan revisi untuk peserta.</p>
                 </div>
             </div>
         </div>
@@ -245,39 +266,66 @@
                 </div>
             </div>
             @if ($tugas->nilai !== null)
-                <div>
+                <div style="display: flex; align-items: center; gap: 10px;">
                     <span class="chip" style="font-size: 16px; font-weight: 700; background: rgba(34, 197, 94, 0.15); color: var(--sukses); padding: 6px 14px; border-radius: 999px;">
                         Nilai: {{ $tugas->nilai }} / 100
                     </span>
+                    <button type="button" class="btn btn-garis btn-kecil" onclick="toggleFormUbahNilai()" id="btn-toggle-ubah-nilai">
+                        <x-ikon nama="pensil" /> Ubah Nilai
+                    </button>
                 </div>
             @endif
         </div>
 
         @if ($tugas->nilai !== null)
-            <div style="background: var(--permukaan-2); padding: 14px 18px; border-radius: var(--radius-kecil); border: 1px solid var(--garis); margin-top: 10px;">
+            <div id="kotak-tampilan-nilai" style="background: var(--permukaan-2); padding: 14px 18px; border-radius: var(--radius-kecil); border: 1px solid var(--garis); margin-top: 10px;">
                 <small class="redup" style="display: block; margin-bottom: 4px;">Catatan Penilaian:</small>
                 <p style="white-space: pre-line; margin: 0; font-weight: 600;">{{ $tugas->catatan_nilai ?: 'Tidak ada catatan tambahan.' }}</p>
             </div>
-        @else
+        @endif
+
+        <div id="form-penilaian-akhir" style="{{ $tugas->nilai !== null ? 'display: none; margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--garis);' : '' }}">
             <form method="POST" action="{{ route('mentor.tugas.nilai', $tugas) }}">
                 @csrf
                 <div class="tata-form" style="grid-template-columns: 180px 1fr; gap: 16px; margin-top: 12px;">
                     <label>Nilai (0 - 100) <span class="wajib">*</span>
-                        <input type="number" name="nilai" min="0" max="100" value="{{ old('nilai') }}" placeholder="Contoh: 90" required>
+                        <input type="number" name="nilai" min="0" max="100" value="{{ old('nilai', $tugas->nilai) }}" placeholder="Contoh: 90" required>
                         @error('nilai')<span class="pesan-salah">{{ $message }}</span>@enderror
                     </label>
                     <label>Catatan / Feedback Penilaian (Opsional)
-                        <textarea name="catatan_nilai" rows="2" placeholder="Tuliskan apresiasi, masukan, atau evaluasi untuk peserta...">{{ old('catatan_nilai') }}</textarea>
+                        <textarea name="catatan_nilai" rows="2" placeholder="Tuliskan apresiasi, masukan, atau evaluasi untuk peserta...">{{ old('catatan_nilai', $tugas->catatan_nilai) }}</textarea>
                         @error('catatan_nilai')<span class="pesan-salah">{{ $message }}</span>@enderror
                     </label>
                 </div>
-                <div class="aksi" style="margin-top: 16px;">
+                <div class="aksi" style="margin-top: 16px; display: flex; gap: 8px;">
                     <button class="btn btn-kuning" type="submit">
-                        <x-ikon nama="centang-saja" /> Simpan Nilai Akhir
+                        <x-ikon nama="centang-saja" /> {{ $tugas->nilai !== null ? 'Simpan Perubahan Nilai' : 'Simpan Nilai Akhir' }}
                     </button>
+                    @if ($tugas->nilai !== null)
+                        <button type="button" class="btn btn-garis" onclick="toggleFormUbahNilai()">Batal</button>
+                    @endif
                 </div>
             </form>
-        @endif
+        </div>
     </div>
+
+    @if ($tugas->nilai !== null)
+        <script>
+            function toggleFormUbahNilai() {
+                const formBox = document.getElementById('form-penilaian-akhir');
+                const viewBox = document.getElementById('kotak-tampilan-nilai');
+                const btn = document.getElementById('btn-toggle-ubah-nilai');
+                if (formBox.style.display === 'none' || formBox.style.display === '') {
+                    formBox.style.display = 'block';
+                    if (viewBox) viewBox.style.display = 'none';
+                    if (btn) btn.style.display = 'none';
+                } else {
+                    formBox.style.display = 'none';
+                    if (viewBox) viewBox.style.display = 'block';
+                    if (btn) btn.style.display = 'inline-flex';
+                }
+            }
+        </script>
+    @endif
 @endif
 @endsection

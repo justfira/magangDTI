@@ -204,9 +204,10 @@ class KelolaTugasTest extends TestCase
         $file = UploadedFile::fake()->create('laporan.pdf', 500, 'application/pdf');
 
         $response = $this->actingAs($this->pesertaUser)->post(route('peserta.tugas.progres', $tugas), [
-            'catatan_progres' => 'Selesai membuat tabel users dan permissions.',
-            'tautan_hasil'    => 'https://github.com/justfira/magangDTI/pull/1',
-            'berkas'          => $file,
+            'catatan_progres'    => 'Selesai membuat tabel users dan permissions.',
+            'tautan_hasil'       => 'https://github.com/justfira/magangDTI/pull/1',
+            'berkas'             => $file,
+            'nama_kustom_berkas' => 'Laporan_Tahap_Satu',
         ]);
 
         $response->assertSessionHas('sukses');
@@ -222,6 +223,21 @@ class KelolaTugasTest extends TestCase
 
         $progres = ProgresTugas::where('id_tugas', $tugas->id_tugas)->first();
         Storage::disk('local')->assertExists($progres->path_berkas);
+        $this->assertStringContainsString('laporan-tahap-satu.pdf', $progres->path_berkas);
+
+        // Uji coba kirim progres kedua TANPA tautan_hasil (tautan bersifat opsional)
+        $tugas->update(['status' => 'Ditugaskan']);
+        $file2 = UploadedFile::fake()->create('dokumen2.zip', 300, 'application/zip');
+        $responseTanpaLink = $this->actingAs($this->pesertaUser)->post(route('peserta.tugas.progres', $tugas), [
+            'catatan_progres' => 'Pengerjaan kedua selesai tanpa tautan online.',
+            'berkas'          => $file2,
+        ]);
+        $responseTanpaLink->assertSessionHas('sukses');
+        $this->assertDatabaseHas('progres_tugas', [
+            'id_tugas'     => $tugas->id_tugas,
+            'urutan'       => 2,
+            'tautan_hasil' => null,
+        ]);
     }
 
     public function test_peserta_tidak_bisa_mengirim_progres_saat_status_diserahkan(): void
@@ -488,6 +504,57 @@ class KelolaTugasTest extends TestCase
         $tugas->refresh();
         $this->assertEquals(95, $tugas->nilai);
         $this->assertEquals('Hasil pekerjaan sangat baik dan rapi.', $tugas->catatan_nilai);
+
+        // Koreksi nilai (Ubah Nilai)
+        $responseKoreksi = $this->actingAs($this->mentorUser)->post(route('mentor.tugas.nilai', $tugas), [
+            'nilai'         => 98,
+            'catatan_nilai' => 'Revisi nilai setelah evaluasi tambahan: sangat memuaskan.',
+        ]);
+
+        $responseKoreksi->assertRedirect(route('mentor.tugas.show', $tugas))
+            ->assertSessionHas('sukses', 'Penilaian tugas berhasil disimpan.');
+
+        $tugas->refresh();
+        $this->assertEquals(98, $tugas->nilai);
+        $this->assertEquals('Revisi nilai setelah evaluasi tambahan: sangat memuaskan.', $tugas->catatan_nilai);
+    }
+
+    public function test_progres_tugas_menandai_tepat_waktu_dan_terlambat(): void
+    {
+        $tenggat = now()->addDays(2);
+        $tugas = Tugas::create([
+            'id_peserta_magang' => $this->pesertaMagang->id_peserta_magang,
+            'judul'             => 'Uji Keterlambatan',
+            'deskripsi'         => 'Testing deadline',
+            'tenggat'           => $tenggat,
+            'jumlah_progres'    => 2,
+            'judul_progres'     => ['P1', 'P2'],
+            'status'            => 'Ditugaskan',
+        ]);
+
+        // Progres tepat waktu (dikirim 1 jam sebelum tenggat)
+        $progresTepat = ProgresTugas::create([
+            'id_tugas'        => $tugas->id_tugas,
+            'urutan'          => 1,
+            'catatan_progres' => 'Tepat waktu',
+            'path_berkas'     => 'tugas-berkas/tepat.pdf',
+            'waktu_kirim'     => $tenggat->copy()->subHours(1),
+        ]);
+
+        $this->assertFalse($progresTepat->apakahTerlambat());
+        $this->assertNull($progresTepat->selisihKeterlambatan());
+
+        // Progres terlambat (dikirim 3 jam setelah tenggat)
+        $progresTerlambat = ProgresTugas::create([
+            'id_tugas'        => $tugas->id_tugas,
+            'urutan'          => 2,
+            'catatan_progres' => 'Terlambat sedikit',
+            'path_berkas'     => 'tugas-berkas/lambat.pdf',
+            'waktu_kirim'     => $tenggat->copy()->addHours(3),
+        ]);
+
+        $this->assertTrue($progresTerlambat->apakahTerlambat());
+        $this->assertNotNull($progresTerlambat->selisihKeterlambatan());
     }
 
     public function test_mentor_tidak_dapat_memberikan_nilai_pada_tugas_belum_selesai(): void
@@ -601,12 +668,18 @@ class KelolaTugasTest extends TestCase
         $this->assertNotNull($tugas);
         $this->assertNotNull($tugas->path_dokumen);
         Storage::disk('local')->assertExists($tugas->path_dokumen);
+        $namaFile = basename($tugas->path_dokumen);
 
-        // Mentor dapat mengunduh dokumen instruksi
-        $responseMentor = $this->actingAs($this->mentorUser)->get(route('tugas.dokumen', $tugas));
-        $responseMentor->assertOk();
+        // Mentor dapat melihat / unduh dokumen instruksi
+        $responseMentorLihat = $this->actingAs($this->mentorUser)->get(route('tugas.dokumen', $tugas));
+        $responseMentorLihat->assertOk()
+            ->assertHeader('content-disposition', "inline; filename={$namaFile}");
 
-        // Peserta dapat mengunduh dokumen instruksi
+        $responseMentorUnduh = $this->actingAs($this->mentorUser)->get(route('tugas.dokumen', ['tugas' => $tugas, 'unduh' => 1]));
+        $responseMentorUnduh->assertOk()
+            ->assertHeader('content-disposition', "attachment; filename={$namaFile}");
+
+        // Peserta dapat melihat dokumen instruksi
         $responsePeserta = $this->actingAs($this->pesertaUser)->get(route('tugas.dokumen', $tugas));
         $responsePeserta->assertOk();
 
@@ -614,5 +687,18 @@ class KelolaTugasTest extends TestCase
         $userLain = $this->buatAkun('PESERTA', 'lain@dti.test', 'Pengguna Lain');
         $responseLain = $this->actingAs($userLain)->get(route('tugas.dokumen', $tugas));
         $responseLain->assertStatus(403);
+
+        // Mentor dapat menghapus berkas lampiran saat edit tugas
+        $responseHapusBerkas = $this->actingAs($this->mentorUser)->put(route('mentor.tugas.update', $tugas), [
+            'judul'         => $tugas->judul,
+            'deskripsi'     => $tugas->deskripsi,
+            'tenggat'       => $tugas->tenggat->toDateString(),
+            'judul_progres' => $tugas->judul_progres,
+            'hapus_dokumen' => 1,
+        ]);
+        $responseHapusBerkas->assertRedirect(route('mentor.tugas.show', $tugas));
+
+        $tugas->refresh();
+        $this->assertNull($tugas->path_dokumen);
     }
 }

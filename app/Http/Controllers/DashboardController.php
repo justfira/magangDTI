@@ -66,12 +66,31 @@ class DashboardController extends Controller
                 $peserta = $pengguna->pesertaMagangBerjalan();
                 if ($peserta) {
                     $judul = 'Dashboard Peserta Magang';
+                    $peserta->load(['mentor', 'seksi']);
+                    $daftarTugas = $peserta->tugas()
+                        ->with(['progresTugas' => fn ($q) => $q->orderBy('urutan')])
+                        ->orderByDesc('id_tugas')
+                        ->get();
+
+                    $tugasBelumSelesai = $daftarTugas->where('status', '!=', 'Selesai')->count();
+                    $tugasSelesai = $daftarTugas->where('status', 'Selesai')->count();
+
                     $kartu = [
                         'Status magang' => $peserta->status_magang,
-                        'Tugas belum selesai' => $peserta->tugas()->where('status', '!=', 'Selesai')->count(),
+                        'Tugas belum selesai' => $tugasBelumSelesai,
+                        'Tugas selesai' => $tugasSelesai,
                         'Hadir bulan ini' => $peserta->presensi()->whereYear('tanggal', now()->year)->whereMonth('tanggal', now()->month)->count(),
                         'Presensi hari ini' => $peserta->presensi()->whereDate('tanggal', today())->exists() ? 'Sudah' : 'Belum',
                     ];
+
+                    return view('dashboard', compact(
+                        'judul',
+                        'kartu',
+                        'peserta',
+                        'daftarTugas',
+                        'tugasBelumSelesai',
+                        'tugasSelesai'
+                    ));
                 } else {
                     $judul = 'Dashboard Calon Peserta';
                     $pengajuan = $pengguna->pengajuanSaya()->with('program')->latest('id_pengajuan')->get();

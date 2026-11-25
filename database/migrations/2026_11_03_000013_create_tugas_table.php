@@ -13,7 +13,7 @@ return new class extends Migration
             $table->unsignedInteger('id_peserta_magang')->comment('menerima');
             $table->string('judul', 180);
             $table->text('deskripsi')->nullable();
-            $table->date('tenggat');
+            $table->dateTime('tenggat');
             $table->unsignedTinyInteger('jumlah_progres')->default(1)->comment('Jumlah target progres yang ditentukan mentor saat membuat tugas');
             $table->json('judul_progres')->nullable()->comment('Daftar judul untuk tiap tahapan progres dalam format JSON');
             $table->string('status', 30)->default('Ditugaskan');

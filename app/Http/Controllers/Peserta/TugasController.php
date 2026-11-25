@@ -84,8 +84,13 @@ class TugasController extends Controller
 
         $file = $request->file('berkas');
         $ekstensi = $file->getClientOriginalExtension();
-        $namaBersih = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-        $namaSanitasi = Str::slug($namaBersih);
+        $namaDasar = $request->filled('nama_kustom_berkas')
+            ? $request->nama_kustom_berkas
+            : pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        $namaSanitasi = Str::slug($namaDasar);
+        if (empty($namaSanitasi)) {
+            $namaSanitasi = 'berkas_progres';
+        }
         $namaSimpan = time() . '_' . $namaSanitasi . '.' . $ekstensi;
         $pathBerkas = $file->storeAs("tugas-berkas/{$tugas->id_tugas}", $namaSimpan, 'local');
 

@@ -16,10 +16,12 @@ class UbahTugasRequest extends FormRequest
         return [
             'judul' => 'required|string|max:180',
             'deskripsi' => 'required|string',
-            'tenggat' => 'required|date',
-            'judul_progres' => 'required|array|min:1',
-            'judul_progres.*' => 'required|string|max:150',
-            'dokumen' => 'nullable|file|mimes:pdf,zip,rar,doc,docx,png,jpg,jpeg|max:10240',
+            'tenggat'             => 'required|date',
+            'judul_progres'       => 'required|array|min:1',
+            'judul_progres.*'     => 'required|string|max:150',
+            'dokumen'             => 'nullable|file|mimes:pdf,zip,rar,doc,docx,png,jpg,jpeg|max:10240',
+            'nama_kustom_dokumen' => 'nullable|string|max:100',
+            'hapus_dokumen'       => 'nullable|boolean',
         ];
     }
 

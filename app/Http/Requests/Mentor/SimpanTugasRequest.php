@@ -43,11 +43,12 @@ class SimpanTugasRequest extends FormRequest
             'id_peserta_magang.*' => 'required|integer|exists:peserta_magang,id_peserta_magang',
             'judul' => 'required|string|max:180',
             'deskripsi' => 'required|string',
-            'tenggat' => 'required|date|after_or_equal:today',
-            'jumlah_progres' => 'required|integer|min:1|max:100',
-            'judul_progres'   => 'required|array|min:1',
-            'judul_progres.*' => 'required|string|max:150',
-            'dokumen'         => 'nullable|file|mimes:pdf,zip,rar,doc,docx,png,jpg,jpeg|max:10240',
+            'tenggat' => 'required|date|after_or_equal:now',
+            'jumlah_progres'      => 'required|integer|min:1|max:100',
+            'judul_progres'       => 'required|array|min:1',
+            'judul_progres.*'     => 'required|string|max:150',
+            'dokumen'             => 'nullable|file|mimes:pdf,zip,rar,doc,docx,png,jpg,jpeg|max:10240',
+            'nama_kustom_dokumen' => 'nullable|string|max:100',
         ];
     }
 
@@ -80,7 +81,7 @@ class SimpanTugasRequest extends FormRequest
             'judul.required' => 'Data tugas belum lengkap (judul wajib diisi).',
             'deskripsi.required' => 'Data tugas belum lengkap (deskripsi wajib diisi).',
             'tenggat.required' => 'Data tugas belum lengkap (tenggat wajib diisi).',
-            'tenggat.after_or_equal' => 'Tenggat tidak boleh lebih awal dari tanggal pembuatan.',
+            'tenggat.after_or_equal' => 'Tenggat waktu tidak boleh lebih awal dari waktu saat ini.',
             'jumlah_progres.required' => 'Data tugas belum lengkap (jumlah progres wajib diisi).',
             'jumlah_progres.min'      => 'Jumlah progres minimal 1.',
             'judul_progres.required'  => 'Judul untuk setiap tahapan progres wajib diisi.',

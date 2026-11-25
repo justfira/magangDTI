@@ -57,10 +57,10 @@
             </label>
 
             <div class="dua-kolom">
-                <label>Tenggat Waktu <span class="teks-wajib" style="color:var(--gagal)">*</span>
-                    <input type="date" name="tenggat" value="{{ old('tenggat', $tugas->tenggat?->format('Y-m-d')) }}" required class="@error('tenggat') salah @enderror">
+                <label>Tenggat Waktu &amp; Jam <span class="teks-wajib" style="color:var(--gagal)">*</span>
+                    <input type="datetime-local" name="tenggat" value="{{ old('tenggat', $tugas->tenggat?->format('Y-m-d\TH:i')) }}" min="{{ now()->format('Y-m-d\TH:i') }}" required class="@error('tenggat') salah @enderror">
                     @error('tenggat')<span class="pesan-salah">{{ $message }}</span>@enderror
-                    <small class="redup">Ubah batas tanggal pengumpulan tugas bila diperlukan perpanjangan waktu.</small>
+                    <small class="redup">Ubah batas tanggal dan jam pengumpulan tugas bila diperlukan perpanjangan waktu.</small>
                 </label>
                 <label>Status Tugas Saat Ini
                     <input type="text" value="{{ $tugas->status }}" disabled>
@@ -74,16 +74,40 @@
 
             <label>Dokumen / Lampiran Instruksi Tugas (Opsional)
                 @if ($tugas->path_dokumen)
-                    <div style="margin-bottom: 8px; font-size: 13px; display: flex; align-items: center; gap: 8px;">
-                        <span class="chip" style="background: rgba(59, 130, 246, 0.1); color: #2563eb;">
-                            <x-ikon nama="berkas" /> Berkas saat ini: {{ basename($tugas->path_dokumen) }}
-                        </span>
-                        <a href="{{ route('tugas.dokumen', $tugas) }}" target="_blank" class="btn btn-garis btn-kecil">Unduh</a>
+                    <div id="wadah-dokumen-saat-ini" style="margin-bottom: 10px; padding: 12px 16px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: var(--radius-kecil); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span class="ikon-bulat" style="background: #2563eb; color: #fff; width: 32px; height: 32px;"><x-ikon nama="berkas" /></span>
+                            <div>
+                                <b style="font-size: 13.5px; display: block;" id="label-nama-berkas">{{ basename($tugas->path_dokumen) }}</b>
+                                <small class="redup" id="sub-nama-berkas">Berkas instruksi tugas saat ini</small>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                            <a href="{{ route('tugas.dokumen', $tugas) }}" target="_blank" class="btn btn-garis btn-kecil" title="Buka dan lihat berkas di tab baru">
+                                <x-ikon nama="mata" /> Lihat
+                            </a>
+                            <a href="{{ route('tugas.dokumen', ['tugas' => $tugas, 'unduh' => 1]) }}" class="btn btn-garis btn-kecil" title="Unduh berkas ke perangkat">
+                                <x-ikon nama="berkas" /> Unduh
+                            </a>
+                            <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--gagal); cursor: pointer; margin: 0; padding: 5px 10px; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 6px; background: #fff;">
+                                <input type="checkbox" name="hapus_dokumen" value="1" id="cb-hapus-dokumen" onchange="toggleHapusDokumen(this)" style="margin: 0;">
+                                <x-ikon nama="silang" style="width: 13px; height: 13px;" /> Hapus Berkas
+                            </label>
+                        </div>
                     </div>
                 @endif
-                <input type="file" name="dokumen" accept=".pdf,.doc,.docx,.zip,.rar,.png,.jpg,.jpeg">
-                <small class="redup">{{ $tugas->path_dokumen ? 'Pilih berkas baru jika ingin mengganti dokumen instruksi yang lama (Maks. 10 MB).' : 'Unggah modul panduan atau berkas instruksi pengerjaan jika ada (Maks. 10 MB).' }}</small>
-                @error('dokumen')<span class="pesan-salah">{{ $message }}</span>@enderror
+                <div class="dua-kolom" style="margin-top: 8px;">
+                    <div>
+                        <input type="file" name="dokumen" accept=".pdf,.doc,.docx,.zip,.rar,.png,.jpg,.jpeg">
+                        <small class="redup">{{ $tugas->path_dokumen ? 'Pilih berkas baru jika ingin mengganti dokumen yang lama (Maks. 10 MB).' : 'Unggah modul panduan atau instruksi jika ada (Maks. 10 MB).' }}</small>
+                        @error('dokumen')<span class="pesan-salah">{{ $message }}</span>@enderror
+                    </div>
+                    <div>
+                        <input type="text" name="nama_kustom_dokumen" value="{{ old('nama_kustom_dokumen') }}" maxlength="100" placeholder="Nama file kustom (opsional)">
+                        <small class="redup">Ubah nama file sebelum disimpan jika diinginkan.</small>
+                        @error('nama_kustom_dokumen')<span class="pesan-salah">{{ $message }}</span>@enderror
+                    </div>
+                </div>
             </label>
 
             {{-- 03. Tahapan Progres Dinamis --}}
@@ -183,6 +207,28 @@ function nomorUlang() {
     document.querySelectorAll('#daftar-progres .item-progres span:first-child').forEach((span, i) => {
         span.textContent = i + 1;
     });
+}
+
+function toggleHapusDokumen(cb) {
+    const wadah = document.getElementById('wadah-dokumen-saat-ini');
+    const label = document.getElementById('label-nama-berkas');
+    const sub = document.getElementById('sub-nama-berkas');
+    if (!wadah) return;
+    if (cb.checked) {
+        wadah.style.background = 'rgba(239, 68, 68, 0.08)';
+        wadah.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+        label.style.textDecoration = 'line-through';
+        label.style.color = 'var(--gagal)';
+        sub.textContent = 'Berkas ini akan dihapus permanen saat Anda menyimpan perubahan';
+        sub.style.color = 'var(--gagal)';
+    } else {
+        wadah.style.background = 'rgba(59, 130, 246, 0.08)';
+        wadah.style.borderColor = 'rgba(59, 130, 246, 0.25)';
+        label.style.textDecoration = 'none';
+        label.style.color = 'var(--teks)';
+        sub.textContent = 'Berkas instruksi tugas saat ini';
+        sub.style.color = '';
+    }
 }
 </script>
 @endsection

@@ -101,8 +101,14 @@ class TugasController extends Controller
         if ($request->hasFile('dokumen')) {
             $file = $request->file('dokumen');
             $ekstensi = $file->getClientOriginalExtension();
-            $namaBersih = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-            $namaSimpan = time() . '_' . \Illuminate\Support\Str::slug($namaBersih) . '.' . $ekstensi;
+            $namaDasar = $request->filled('nama_kustom_dokumen')
+                ? $request->nama_kustom_dokumen
+                : pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $namaSanitasi = \Illuminate\Support\Str::slug($namaDasar);
+            if (empty($namaSanitasi)) {
+                $namaSanitasi = 'dokumen_instruksi';
+            }
+            $namaSimpan = time() . '_' . $namaSanitasi . '.' . $ekstensi;
             $pathDokumen = $file->storeAs('tugas-instruksi', $namaSimpan, 'local');
         }
 
@@ -147,7 +153,8 @@ class TugasController extends Controller
         $this->pastikanBimbingan($tugas->pesertaMagang);
 
         $tugas->load(['pesertaMagang.keputusan.calon', 'pesertaMagang.pengguna', 'progresTugas']);
-        $progresTerakhir = $tugas->progresTerakhir();
+        $progresMenunggu = $tugas->progresTugas->whereNull('hasil_review')->first();
+        $progresTerakhir = $progresMenunggu ?? $tugas->progresTerakhir();
         $bisaReview = ($tugas->status === 'Diserahkan' && $progresTerakhir && $progresTerakhir->hasil_review === null);
 
         return view('mentor.tugas.show', compact('tugas', 'progresTerakhir', 'bisaReview'));
@@ -189,11 +196,27 @@ class TugasController extends Controller
         }
 
         $pathDokumen = $tugas->path_dokumen;
-        if ($request->hasFile('dokumen')) {
+        if ($request->boolean('hapus_dokumen') && ! $request->hasFile('dokumen')) {
+            if ($tugas->path_dokumen && \Illuminate\Support\Facades\Storage::disk('local')->exists($tugas->path_dokumen)) {
+                $dipakaiLain = Tugas::where('path_dokumen', $tugas->path_dokumen)
+                    ->where('id_tugas', '!=', $tugas->id_tugas)
+                    ->exists();
+                if (! $dipakaiLain) {
+                    \Illuminate\Support\Facades\Storage::disk('local')->delete($tugas->path_dokumen);
+                }
+            }
+            $pathDokumen = null;
+        } elseif ($request->hasFile('dokumen')) {
             $file = $request->file('dokumen');
             $ekstensi = $file->getClientOriginalExtension();
-            $namaBersih = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-            $namaSimpan = time() . '_' . \Illuminate\Support\Str::slug($namaBersih) . '.' . $ekstensi;
+            $namaDasar = $request->filled('nama_kustom_dokumen')
+                ? $request->nama_kustom_dokumen
+                : pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $namaSanitasi = \Illuminate\Support\Str::slug($namaDasar);
+            if (empty($namaSanitasi)) {
+                $namaSanitasi = 'dokumen_instruksi';
+            }
+            $namaSimpan = time() . '_' . $namaSanitasi . '.' . $ekstensi;
             $pathBaru = $file->storeAs('tugas-instruksi', $namaSimpan, 'local');
 
             if ($tugas->path_dokumen && \Illuminate\Support\Facades\Storage::disk('local')->exists($tugas->path_dokumen)) {

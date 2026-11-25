@@ -69,8 +69,9 @@
             </label>
 
             <div class="dua-kolom">
-                <label>Tenggat Waktu <span class="teks-wajib" style="color:var(--gagal)">*</span>
-                    <input type="date" name="tenggat" value="{{ old('tenggat', now()->addDays(7)->format('Y-m-d')) }}" min="{{ date('Y-m-d') }}" required class="@error('tenggat') salah @enderror">
+                <label>Tenggat Waktu &amp; Jam <span class="teks-wajib" style="color:var(--gagal)">*</span>
+                    <input type="datetime-local" name="tenggat" value="{{ old('tenggat', now()->addDays(7)->setTime(23, 59)->format('Y-m-d\TH:i')) }}" min="{{ now()->format('Y-m-d\TH:i') }}" required class="@error('tenggat') salah @enderror">
+                    <small class="redup">Tentukan batas tanggal dan jam pengumpulan tugas (waktu saat ini atau setelahnya).</small>
                     @error('tenggat')<span class="pesan-salah">{{ $message }}</span>@enderror
                 </label>
             </div>
@@ -80,11 +81,18 @@
                 @error('deskripsi')<span class="pesan-salah">{{ $message }}</span>@enderror
             </label>
 
-            <label>Dokumen / Lampiran Instruksi Tugas (Opsional)
-                <input type="file" name="dokumen" accept=".pdf,.doc,.docx,.zip,.rar,.png,.jpg,.jpeg">
-                <small class="redup">Unggah modul panduan, lembar petunjuk, atau berkas pendukung instruksi (PDF, DOC, DOCX, ZIP, RAR, maks. 10 MB).</small>
-                @error('dokumen')<span class="pesan-salah">{{ $message }}</span>@enderror
-            </label>
+            <div class="dua-kolom" style="margin-top: 8px;">
+                <label>Dokumen / Lampiran Instruksi (Opsional)
+                    <input type="file" name="dokumen" accept=".pdf,.doc,.docx,.zip,.rar,.png,.jpg,.jpeg">
+                    <small class="redup">Format: PDF, DOC, DOCX, ZIP, RAR (Maks. 10 MB).</small>
+                    @error('dokumen')<span class="pesan-salah">{{ $message }}</span>@enderror
+                </label>
+                <label>Nama File Dokumen (Opsional)
+                    <input type="text" name="nama_kustom_dokumen" value="{{ old('nama_kustom_dokumen') }}" maxlength="100" placeholder="mis. Panduan_Pengerjaan_Modul_C">
+                    <small class="redup">Ubah nama file sebelum disimpan jika diinginkan.</small>
+                    @error('nama_kustom_dokumen')<span class="pesan-salah">{{ $message }}</span>@enderror
+                </label>
+            </div>
 
             {{-- Tahapan Progres --}}
             <div style="margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--garis);">

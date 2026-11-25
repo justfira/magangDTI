@@ -86,7 +86,7 @@
                         <b>{{ $namaMentor }}</b>
                     </td>
                     <td>
-                        <span class="sel-ikon"><x-ikon nama="kalender" />{{ $tugas->tenggat?->format('d/m/Y') }}</span>
+                        <span class="sel-ikon"><x-ikon nama="kalender" />{{ $tugas->tenggat?->format('d/m/Y H:i') }}</span>
                     </td>
                     <td>
                         <span class="chip">Progres ke-{{ $urutanAktif }} dari {{ $tugas->jumlah_progres }}</span>

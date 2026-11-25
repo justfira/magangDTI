@@ -34,7 +34,7 @@ class Tugas extends Model
     protected function casts(): array
     {
         return [
-            'tenggat' => 'date',
+            'tenggat' => 'datetime',
             'jumlah_progres' => 'integer',
             'judul_progres' => 'array',
             'nilai' => 'integer',
@@ -53,7 +53,11 @@ class Tugas extends Model
 
     public function progresTerakhir(): ?ProgresTugas
     {
-        return $this->progresTugas()->orderByDesc('urutan')->first();
+        if ($this->relationLoaded('progresTugas')) {
+            return $this->progresTugas->sortByDesc('urutan')->first();
+        }
+
+        return $this->progresTugas()->reorder('urutan', 'desc')->first();
     }
 
     public function urutanProgresTerakhir(): int

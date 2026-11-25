@@ -90,7 +90,7 @@
                                 {{ $judulTugas }}
                             </h2>
                             <div style="display: flex; gap: 16px; font-size: 13px; color: var(--redup); flex-wrap: wrap;">
-                                <span><x-ikon nama="kalender" /> Tenggat: <b>{{ $contoh->tenggat?->format('d M Y') }}</b></span>
+                                <span><x-ikon nama="kalender" /> Tenggat: <b>{{ $contoh->tenggat?->format('d M Y, H:i') }}</b></span>
                                 <span><x-ikon nama="papan-centang" /> Target: <b>{{ $contoh->jumlah_progres }} Tahapan</b></span>
                                 <span><x-ikon nama="pengguna" /> Penerima: <b>{{ $jumlahPeserta }} Mahasiswa</b></span>
                             </div>

@@ -3,15 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProgresTugas;
+use App\Models\Tugas;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class TugasBerkasController extends Controller
 {
     /**
-     * Unduh berkas progres tugas dengan otorisasi (hanya Mentor bimbingan atau Peserta pemilik).
+     * Unduh atau lihat berkas progres tugas dengan otorisasi (Mentor bimbingan atau Peserta pemilik).
+     * Jika ada query string ?unduh=1 maka dipaksa unduh, jika tidak maka ditampilkan inline (preview).
      */
-    public function unduh(ProgresTugas $progres): StreamedResponse
+    public function unduh(ProgresTugas $progres): Response
     {
         $peserta = $progres->tugas?->pesertaMagang;
         abort_unless($peserta, 404, 'Tugas tidak ditemukan.');
@@ -28,13 +30,18 @@ class TugasBerkasController extends Controller
 
         $namaBerkasAsli = basename($progres->path_berkas);
 
-        return Storage::disk('local')->download($progres->path_berkas, $namaBerkasAsli);
+        if (request()->boolean('unduh')) {
+            return Storage::disk('local')->download($progres->path_berkas, $namaBerkasAsli);
+        }
+
+        return Storage::disk('local')->response($progres->path_berkas, $namaBerkasAsli);
     }
 
     /**
-     * Unduh berkas dokumen instruksi tugas dari mentor dengan otorisasi (Mentor & Peserta).
+     * Unduh atau lihat berkas dokumen instruksi tugas dari mentor dengan otorisasi (Mentor & Peserta).
+     * Jika ada query string ?unduh=1 maka dipaksa unduh, jika tidak maka ditampilkan inline (preview).
      */
-    public function unduhDokumenTugas(\App\Models\Tugas $tugas): StreamedResponse
+    public function unduhDokumenTugas(Tugas $tugas): Response
     {
         $peserta = $tugas->pesertaMagang;
         abort_unless($peserta, 404, 'Tugas tidak ditemukan.');
@@ -51,6 +58,10 @@ class TugasBerkasController extends Controller
 
         $namaBerkasAsli = basename($tugas->path_dokumen);
 
-        return Storage::disk('local')->download($tugas->path_dokumen, $namaBerkasAsli);
+        if (request()->boolean('unduh')) {
+            return Storage::disk('local')->download($tugas->path_dokumen, $namaBerkasAsli);
+        }
+
+        return Storage::disk('local')->response($tugas->path_dokumen, $namaBerkasAsli);
     }
 }
