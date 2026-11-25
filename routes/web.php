@@ -39,6 +39,8 @@ Route::middleware(['auth', 'akun.aktif'])->group(function () {
         Route::get('/superadmin/verifikasi-pengajuan', [Controllers\Superadmin\VerifikasiPengajuanController::class, 'index'])->name('superadmin.verifikasi.index');
         Route::get('/superadmin/verifikasi-pengajuan/{pengajuan}', [Controllers\Superadmin\VerifikasiPengajuanController::class, 'show'])->name('superadmin.verifikasi.show');
         Route::post('/superadmin/verifikasi-pengajuan/{pengajuan}/periksa', [Controllers\Superadmin\VerifikasiPengajuanController::class, 'periksa'])->name('superadmin.verifikasi.periksa');
+        Route::get('/superadmin/verifikasi-pengajuan/{pengajuan}/dokumen/{dokumen}', [Controllers\Superadmin\VerifikasiPengajuanController::class, 'unduhDokumen'])->name('superadmin.verifikasi.dokumen');
+
         Route::get('/superadmin/hak-akses', [Controllers\Superadmin\AkunController::class, 'hakAkses'])->name('superadmin.hak-akses');
         Route::get('/superadmin/akun', [Controllers\Superadmin\AkunController::class, 'index'])->name('superadmin.akun.index');
         Route::get('/superadmin/akun/create', [Controllers\Superadmin\AkunController::class, 'create'])->name('superadmin.akun.create');
