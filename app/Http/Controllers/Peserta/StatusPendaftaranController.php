@@ -18,18 +18,20 @@ use Illuminate\View\View;
 class StatusPendaftaranController extends Controller
 {
     /**
-     * Status Pendaftaran — GET /peserta/pendaftaran
-     * Langkah:
-     *  - Tampilkan tracker status pengajuan milik pengguna login (pengajuanSaya).
+     * Status Pendaftaran — GET /peserta/pendaftaran   (UC-05 langkah 12 & A1, sisi pendaftar)
+     *  - Tracker status pengajuan milik pengguna login (pengajuanSaya).
      *  - Jika status Perlu Perbaikan: tampilkan catatan_perbaikan & dokumen yang Tidak Sesuai.
+     *  - Jika sudah diputuskan Direktur: tampilkan hasil Diterima / Ditolak.
+     * Form & kirim perbaikan (edit/update di bawah) tetap bagian UC-03 A4.
      */
     public function index(Request $request): View
     {
-        return $this->halamanRancangan(
-            'Status Pendaftaran', 'UC-03 / UC-05', 'Calon Peserta',
-            ['Tampilkan tracker status pengajuan milik pengguna login (pengajuanSaya).', 'Jika status Perlu Perbaikan: tampilkan catatan_perbaikan & dokumen yang Tidak Sesuai.'],
-            ['pengajuan', 'dokumen_pengajuan', 'keputusan_penerimaan'],
-        );
+        $pengajuan = $request->user()->pengajuanSaya()
+            ->with(['program.syaratDokumenProgram', 'dokumenPengajuan', 'calonPeserta.keputusanPenerimaan', 'pemeriksa.pengguna'])
+            ->orderByDesc('tanggal_pengajuan')
+            ->get();
+
+        return view('peserta.pendaftaran.index', compact('pengajuan'));
     }
 
     /**

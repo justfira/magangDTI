@@ -1,0 +1,100 @@
+/* ==========================================================================
+   penerimaan.css — UC-05 Memverifikasi dan Memutuskan Penerimaan
+   Dipakai: superadmin/verifikasi/*, kepala-seksi/rekomendasi/*, direktur/penerimaan/*, peserta/pendaftaran/*
+   Token warna & komponen dasar dari app.css. Kelas baru berawalan pn-.
+   ========================================================================== */
+
+/* ---------- Tata letak daftar + panel kanan (mockup A3: Rekomendasi & Persetujuan) ---------- */
+.pn-dua { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(320px, 1fr); gap: 18px; align-items: start; }
+.pn-dua > * { min-width: 0; }
+.pn-dua > .kartu { margin-bottom: 0; }
+.pn-dua--rinci { grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr); }
+.pn-kolom { display: grid; gap: 18px; min-width: 0; }
+.pn-kolom > .kartu { margin-bottom: 0; }
+.pn-lengket { position: sticky; top: 84px; }
+@media (max-width: 1100px) {
+  .pn-dua, .pn-dua--rinci { grid-template-columns: 1fr; }
+  .pn-lengket { position: static; }
+}
+
+.pn-filter { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--garis); }
+.pn-filter .input-ikon { flex: 1 1 220px; }
+.pn-filter select { width: auto; flex: 0 0 auto; margin: 0; }
+.pn-filter input { margin: 0; }
+
+tr.pn-terpilih td { background: #F3F8EF; }
+tr.pn-terpilih td:first-child { box-shadow: inset 3px 0 0 var(--utama); }
+
+/* ---------- Kepala panel detail ---------- */
+.pn-kepala { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.pn-kepala h2 { margin: 0; font-family: var(--display); font-size: 21px; color: var(--olive); }
+.pn-kepala p { margin: 4px 0 0; color: var(--redup); font-size: 13px; }
+.pn-subjudul { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--redup); margin: 20px 0 10px; }
+.pn-panel-kosong { text-align: center; padding: 36px 18px; color: var(--redup); }
+.pn-panel-kosong .ikon { width: 34px; height: 34px; color: var(--olive); opacity: .45; margin-bottom: 8px; }
+.pn-panel-kosong b { display: block; color: var(--teks); margin-bottom: 4px; }
+
+.pn-dl { display: grid; grid-template-columns: minmax(110px, 150px) 1fr; gap: 9px 14px; margin: 0; font-size: 14px; }
+.pn-dl dt { color: var(--redup); }
+.pn-dl dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
+@media (max-width: 480px) { .pn-dl { grid-template-columns: 1fr; gap: 2px; } .pn-dl dd { margin-bottom: 8px; } }
+
+/* ---------- Timeline alur persetujuan ---------- */
+.pn-alur { list-style: none; margin: 0; padding: 0; }
+.pn-alur li { position: relative; padding: 0 0 18px 30px; }
+.pn-alur li:last-child { padding-bottom: 0; }
+.pn-alur li::before {
+  content: ""; position: absolute; left: 6px; top: 16px; bottom: -2px; width: 2px; background: var(--garis);
+}
+.pn-alur li:last-child::before { display: none; }
+.pn-alur li::after {
+  content: ""; position: absolute; left: 0; top: 3px; width: 14px; height: 14px; border-radius: 50%;
+  background: #fff; border: 2px solid #C9C6B5;
+}
+.pn-alur li.selesai::after { background: var(--utama); border-color: var(--utama); }
+.pn-alur li.selesai::before { background: var(--utama); opacity: .45; }
+.pn-alur li.aktif::after { border-color: var(--kuning); background: var(--kuning); box-shadow: 0 0 0 4px rgba(242, 201, 76, .25); }
+.pn-alur li.gagal::after { border-color: var(--gagal); background: var(--gagal); }
+.pn-alur b { display: block; font-size: 14px; color: var(--teks); }
+.pn-alur span { display: block; font-size: 12.5px; color: var(--redup); margin-top: 2px; }
+
+/* ---------- Checklist dokumen ---------- */
+.pn-dok { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.pn-dok-baris {
+  border: 1px solid var(--garis); border-radius: var(--radius-kecil); background: #fff; padding: 12px 14px;
+}
+.pn-dok-atas { display: flex; align-items: center; gap: 12px; }
+.pn-dok-ikon { width: 38px; height: 38px; flex-shrink: 0; display: grid; place-items: center; border-radius: 10px; background: var(--peru-muda); color: var(--peru); font-size: 10.5px; font-weight: 700; letter-spacing: .03em; }
+.pn-dok-ikon.kosong { background: #F4F2EA; color: #A8A48F; }
+.pn-dok-nama { flex: 1; min-width: 0; }
+.pn-dok-nama b { display: block; font-size: 14px; }
+.pn-dok-nama small { display: block; font-size: 12.5px; color: var(--redup); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pn-dok-hasil { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--garis); }
+.pn-dok-hasil label { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 500; font-size: 13.5px; cursor: pointer; color: var(--teks); }
+.pn-dok-hasil input[type=text] { flex: 1 1 220px; margin: 0; padding: 8px 11px; font-size: 13.5px; }
+.pn-dok-hasil .pesan-salah { flex-basis: 100%; }
+.pn-dok-catatan { margin: 8px 0 0; font-size: 12.5px; color: var(--gagal); }
+
+/* ---------- Form keputusan (panel bawah kanan) ---------- */
+.pn-form textarea { min-height: 96px; resize: vertical; }
+.pn-tombol { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.pn-tombol .btn { justify-content: center; }
+.btn-garis-merah { background: #fff; color: var(--gagal); border: 1.5px solid rgba(178, 58, 58, .45); box-shadow: none; }
+.btn-garis-merah:hover { background: #FBEAEA; color: var(--gagal); }
+.pn-terkunci { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: var(--radius-kecil); background: var(--permukaan-2); font-size: 13.5px; color: var(--redup); }
+.pn-terkunci .ikon { flex-shrink: 0; width: 18px; height: 18px; margin-top: 1px; }
+
+.pn-banner { margin-bottom: 18px; }
+
+/* Kutipan catatan (rekomendasi / perbaikan) */
+.pn-kutip { margin: 6px 0 0; padding: 10px 12px; border-left: 3px solid var(--kuning); background: var(--floral); border-radius: 0 10px 10px 0; font-size: 13.5px; white-space: pre-line; }
+.pn-kutip.merah { border-left-color: var(--gagal); background: #FBF1F1; }
+
+/* ---------- Status pendaftar (peserta) ---------- */
+.pn-hasil { display: flex; gap: 14px; align-items: center; padding: 16px 18px; border-radius: 16px; margin-top: 16px; }
+.pn-hasil .ikon { width: 26px; height: 26px; flex-shrink: 0; }
+.pn-hasil b { display: block; font-size: 16px; }
+.pn-hasil.diterima { background: #E3F4E9; color: var(--sukses); }
+.pn-hasil.ditolak { background: #FBEAEA; color: var(--gagal); }
+.pn-hasil.proses { background: var(--floral); color: var(--olive); }
+.pn-hasil p { margin: 2px 0 0; font-size: 13.5px; color: var(--teks); }
