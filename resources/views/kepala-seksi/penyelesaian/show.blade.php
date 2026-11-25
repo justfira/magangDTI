@@ -6,6 +6,10 @@
     <a class="btn btn-garis" href="{{ route('kasi.penyelesaian.index') }}">← Kembali</a>
 </div>
 
+@if ($infoMasaMagang && ! $alasanTidakBoleh)
+    <div class="alert alert-{{ $infoMasaMagang[0] }}">{{ $infoMasaMagang[1] }}</div>
+@endif
+
 <div class="kartu">
     <div class="kartu-kepala"><h2>Data Peserta</h2></div>
     <div class="dua-kolom">
@@ -16,7 +20,8 @@
         </div>
         <div>
             <p><span class="redup">Seksi / Mentor</span><br><b>{{ $peserta->seksi?->nama_seksi ?? '-' }}</b> · {{ $peserta->mentor?->pengguna?->nama_lengkap ?? 'Mentor belum ditetapkan' }}</p>
-            <p><span class="redup">Periode magang</span><br><b>{{ $peserta->tanggal_mulai?->format('d/m/Y') ?? '-' }} – {{ $peserta->tanggal_selesai?->format('d/m/Y') ?? '-' }}</b></p>
+            <p><span class="redup">Tanggal mulai magang</span><br><b>{{ $peserta->tanggal_mulai?->format('d/m/Y') ?? '-' }}</b></p>
+            <p><span class="redup">Tanggal selesai magang</span><br><b>{{ $peserta->tanggal_selesai?->format('d/m/Y') ?? '-' }}</b></p>
             <p><span class="redup">Status magang</span><br><span class="status {{ $peserta->status_magang === 'Selesai' ? 'status-sukses' : 'status-info' }}">{{ $peserta->status_magang }}</span></p>
         </div>
     </div>
@@ -31,7 +36,7 @@
 
 <div class="kartu">
     <div class="kartu-kepala"><h2>Evaluasi Mentor</h2></div>
-    @if ($peringatanEvaluasi)
+    @if ($peringatanEvaluasi && ! $alasanTidakBoleh)
         <div class="alert alert-peringatan">{{ $peringatanEvaluasi }} Anda tetap dapat membuat rekomendasi.</div>
     @endif
     @if ($evaluasi)

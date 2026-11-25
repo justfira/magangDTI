@@ -29,11 +29,15 @@ use Illuminate\View\View;
  */
 class PenyelesaianController extends Controller
 {
-    private const TAB = ['aktif' => 'Sedang Berjalan', 'selesai' => 'Selesai', 'semua' => 'Semua'];
+    private const TAB = ['aktif' => 'Sedang Berjalan', 'ditinjau' => 'Waktunya Ditinjau', 'selesai' => 'Selesai', 'semua' => 'Semua'];
+
+    /** Batas hari menjelang tanggal_selesai untuk penanda "Berakhir dalam N hari" dan tab Waktunya Ditinjau. */
+    private const HARI_MENJELANG = 14;
 
     /**
      * Penyelesaian Magang — GET /kepala-seksi/penyelesaian
-     * Daftar peserta seksi sendiri beserta ringkasan tugas, kehadiran, logbook, evaluasi.
+     * Daftar peserta seksi sendiri (langsung dari peserta_magang) beserta ringkasan tugas, kehadiran,
+     * logbook, evaluasi, dan penanda waktu berdasarkan peserta_magang.tanggal_selesai.
      */
     public function index(Request $request): View
     {
@@ -42,17 +46,27 @@ class PenyelesaianController extends Controller
 
         $peserta = $this->denganRingkasan(PesertaMagang::query()->where('id_seksi', $idSeksi))
             ->when($tab === 'aktif', fn (Builder $q) => $q->where('status_magang', 'Aktif'))
+            ->when($tab === 'ditinjau', fn (Builder $q) => $q->where('status_magang', 'Aktif')
+                ->whereDate('tanggal_selesai', '<=', today()->addDays(self::HARI_MENJELANG))
+                ->whereDoesntHave('penyelesaianMagang', fn (Builder $p) => $p->where(fn (Builder $g) => $this->filterPenghalang($g))))
             ->when($tab === 'selesai', fn (Builder $q) => $q->where('status_magang', 'Selesai'))
             ->when($tab === 'semua', fn (Builder $q) => $q->whereIn('status_magang', ['Aktif', 'Selesai']))
             ->with(['pengguna', 'keputusan.calon', 'mentor.pengguna', 'evaluasiPeserta', 'penyelesaianMagang'])
             ->orderBy('tanggal_selesai')
+            ->orderBy('id_peserta_magang')
             ->paginate(10)
             ->withQueryString();
 
+        // Penanda dihitung di server dari data yang sudah di-eager-load (tanpa query tambahan).
+        $penanda = $peserta->getCollection()
+            ->mapWithKeys(fn (PesertaMagang $p) => [$p->id_peserta_magang => $this->penandaWaktu($p)]);
+
         return view('kepala-seksi.penyelesaian.index', [
             'peserta' => $peserta,
+            'penanda' => $penanda,
             'tab' => $tab,
             'daftarTab' => self::TAB,
+            'hariMenjelang' => self::HARI_MENJELANG,
         ]);
     }
 
@@ -87,6 +101,7 @@ class PenyelesaianController extends Controller
             'peringatanEvaluasi' => $peringatanEvaluasi,
             'riwayat' => $riwayat,
             'alasanTidakBoleh' => $this->alasanTidakBolehRekomendasi($peserta),
+            'infoMasaMagang' => $this->infoMasaMagang($peserta),
         ]);
     }
 
@@ -176,9 +191,7 @@ class PenyelesaianController extends Controller
         }
 
         $penghalang = $peserta->penyelesaianMagang()
-            ->where(fn (Builder $q) => $q
-                ->where(fn (Builder $q) => $q->where('rekomendasi', 'Layak Diselesaikan')->whereNull('keputusan'))
-                ->orWhere('keputusan', 'Disetujui'))
+            ->where(fn (Builder $q) => $this->filterPenghalang($q))
             ->latest('id_penyelesaian')
             ->first();
 
@@ -187,6 +200,50 @@ class PenyelesaianController extends Controller
             $penghalang->keputusan === 'Disetujui' => 'Penyelesaian magang peserta ini sudah disetujui Direktur.',
             default => 'Peserta ini masih memiliki rekomendasi "Layak Diselesaikan" yang menunggu keputusan Direktur.',
         };
+    }
+
+    /** Penyelesaian yang menghalangi rekomendasi baru: 'Layak Diselesaikan' yang belum diputuskan, atau yang 'Disetujui'. */
+    private function filterPenghalang(Builder $q): Builder
+    {
+        return $q->where(fn (Builder $q) => $q->where('rekomendasi', 'Layak Diselesaikan')->whereNull('keputusan'))
+            ->orWhere('keputusan', 'Disetujui');
+    }
+
+    /**
+     * Penanda waktu untuk daftar: [kelas CSS, teks], atau null bila peserta tidak perlu penanda
+     * (bukan Aktif, sedang menunggu keputusan Direktur, atau sudah Disetujui).
+     * Memakai relasi penyelesaianMagang yang sudah di-eager-load.
+     */
+    private function penandaWaktu(PesertaMagang $peserta): ?array
+    {
+        if ($peserta->status_magang !== 'Aktif' || $peserta->tanggal_selesai === null) {
+            return null;
+        }
+
+        $terhalang = $peserta->penyelesaianMagang->contains(fn (PenyelesaianMagang $p) => ($p->rekomendasi === 'Layak Diselesaikan' && $p->keputusan === null) || $p->keputusan === 'Disetujui');
+        if ($terhalang) {
+            return null;
+        }
+
+        $sisaHari = (int) today()->diffInDays($peserta->tanggal_selesai->copy()->startOfDay(), false);
+
+        return match (true) {
+            $sisaHari <= 0 => ['status-peringatan', 'Sudah waktunya ditinjau'],
+            $sisaHari <= self::HARI_MENJELANG => ['status-info', "Berakhir dalam {$sisaHari} hari"],
+            default => ['status-netral', 'Masih berjalan'],
+        };
+    }
+
+    /** Keterangan masa magang di halaman tinjau (hanya informasi; penyimpanan rekomendasi tidak ditolak). */
+    private function infoMasaMagang(PesertaMagang $peserta): ?array
+    {
+        if ($peserta->status_magang !== 'Aktif' || $peserta->tanggal_selesai === null) {
+            return null;
+        }
+
+        return $peserta->tanggal_selesai->copy()->startOfDay()->gt(today())
+            ? ['peringatan', 'Masa magang belum berakhir (berakhir pada '.$peserta->tanggal_selesai->format('d/m/Y').').']
+            : ['info', 'Masa magang sudah berakhir, silakan tinjau.'];
     }
 
     /** id_seksi milik Kepala Seksi yang login; 403 bila tidak terdaftar di seksi mana pun. */
