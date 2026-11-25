@@ -12,25 +12,35 @@ class SimpanTugasRequest extends FormRequest
         return auth()->check() && (auth()->user()?->punyaPeran('MENTOR') ?? false);
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('id_peserta_magang') && ! is_array($this->id_peserta_magang)) {
+            $this->merge([
+                'id_peserta_magang' => [$this->id_peserta_magang],
+            ]);
+        }
+
+        if (! $this->has('judul_progres') && $this->filled('jumlah_progres')) {
+            $jumlah = (int) $this->jumlah_progres;
+            $judulProgres = [];
+            for ($i = 1; $i <= $jumlah; $i++) {
+                $judulProgres[] = "Tahap {$i}";
+            }
+            $this->merge([
+                'judul_progres' => $judulProgres,
+            ]);
+        } elseif ($this->has('judul_progres') && is_array($this->judul_progres) && ! $this->filled('jumlah_progres')) {
+            $this->merge([
+                'jumlah_progres' => count($this->judul_progres),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
         return [
-            'id_peserta_magang' => [
-                'required',
-                'integer',
-                'exists:peserta_magang,id_peserta_magang',
-                function ($attribute, $value, $fail) {
-                    $peserta = PesertaMagang::find($value);
-                    $mentor = auth()->user()?->pegawai;
-                    if (! $peserta || ! $peserta->dibimbingOleh($mentor)) {
-                        $fail('Peserta bukan merupakan peserta bimbingan Anda.');
-                        return;
-                    }
-                    if ($peserta->status_magang !== 'Aktif') {
-                        $fail('Peserta bimbingan tidak berstatus Aktif.');
-                    }
-                },
-            ],
+            'id_peserta_magang' => 'required|array|min:1',
+            'id_peserta_magang.*' => 'required|integer|exists:peserta_magang,id_peserta_magang',
             'judul' => 'required|string|max:180',
             'deskripsi' => 'required|string',
             'tenggat' => 'required|date|after_or_equal:today',
@@ -38,6 +48,28 @@ class SimpanTugasRequest extends FormRequest
             'judul_progres'   => 'required|array|min:1',
             'judul_progres.*' => 'required|string|max:150',
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $ids = $this->input('id_peserta_magang', []);
+            if (! is_array($ids)) {
+                return;
+            }
+            $mentor = auth()->user()?->pegawai;
+            foreach ($ids as $id) {
+                $peserta = PesertaMagang::find($id);
+                if (! $peserta || ! $peserta->dibimbingOleh($mentor)) {
+                    $validator->errors()->add('id_peserta_magang', 'Peserta bukan merupakan peserta bimbingan Anda.');
+                    break;
+                }
+                if ($peserta->status_magang !== 'Aktif') {
+                    $validator->errors()->add('id_peserta_magang', 'Peserta bimbingan tidak berstatus Aktif.');
+                    break;
+                }
+            }
+        });
     }
 
     public function messages(): array

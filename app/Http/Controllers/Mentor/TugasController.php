@@ -57,10 +57,12 @@ class TugasController extends Controller
             });
         }
 
-        $daftarTugas = $query->orderByDesc('id_tugas')->paginate(10)->withQueryString();
+        $daftarTugas = $query->orderByDesc('id_tugas')->paginate(20)->withQueryString();
+        $kelompokTugas = $daftarTugas->getCollection()->groupBy('judul');
 
         return view('mentor.tugas.index', compact(
             'daftarTugas',
+            'kelompokTugas',
             'totalTugas',
             'tugasDiserahkan',
             'tugasPerluPerbaikan',
@@ -92,25 +94,39 @@ class TugasController extends Controller
         $mentor = $this->pegawaiLogin();
         abort_unless($mentor, 403, 'Akses ditolak.');
 
-        $peserta = PesertaMagang::findOrFail($request->id_peserta_magang);
-        $this->pastikanBimbingan($peserta);
-        abort_unless($peserta->status_magang === 'Aktif', 422, 'Peserta bimbingan tidak berstatus Aktif.');
+        $pesertaIds = (array) $request->id_peserta_magang;
+        $daftarTugasBaru = [];
 
-        $tugas = DB::transaction(function () use ($request, $peserta) {
-            return Tugas::create([
-                'id_peserta_magang' => $peserta->id_peserta_magang,
-                'judul'             => $request->judul,
-                'deskripsi'         => $request->deskripsi,
-                'tenggat'           => $request->tenggat,
-                'jumlah_progres'    => count($request->judul_progres),
-                'judul_progres'     => $request->judul_progres,
-                'status'            => 'Ditugaskan',
-            ]);
+        DB::transaction(function () use ($request, $pesertaIds, &$daftarTugasBaru) {
+            foreach ($pesertaIds as $idPeserta) {
+                $peserta = PesertaMagang::findOrFail($idPeserta);
+                $this->pastikanBimbingan($peserta);
+                abort_unless($peserta->status_magang === 'Aktif', 422, 'Peserta bimbingan tidak berstatus Aktif.');
+
+                $tugas = Tugas::create([
+                    'id_peserta_magang' => $peserta->id_peserta_magang,
+                    'judul'             => $request->judul,
+                    'deskripsi'         => $request->deskripsi,
+                    'tenggat'           => $request->tenggat,
+                    'jumlah_progres'    => count($request->judul_progres),
+                    'judul_progres'     => array_values($request->judul_progres),
+                    'status'            => 'Ditugaskan',
+                ]);
+
+                // TODO: notifikasi tugas baru ke peserta ($peserta->id_pengguna)
+                $daftarTugasBaru[] = $tugas;
+            }
         });
 
-        // TODO: notifikasi tugas baru ke peserta ($peserta->id_pengguna)
+        $pesan = count($daftarTugasBaru) > 1
+            ? count($daftarTugasBaru) . ' tugas berhasil dibuat dan diberikan ke peserta bimbingan terpilih.'
+            : 'Tugas berhasil dibuat.';
 
-        return redirect()->route('mentor.tugas.show', $tugas)->with('sukses', 'Tugas berhasil dibuat.');
+        if (count($daftarTugasBaru) === 1) {
+            return redirect()->route('mentor.tugas.show', $daftarTugasBaru[0])->with('sukses', $pesan);
+        }
+
+        return redirect()->route('mentor.tugas.index')->with('sukses', $pesan);
     }
 
     /**
@@ -134,6 +150,8 @@ class TugasController extends Controller
     {
         $this->pastikanBimbingan($tugas->pesertaMagang);
 
+        abort_if($tugas->status === 'Selesai', 403, 'Tugas yang sudah selesai tidak dapat diubah lagi.');
+
         $tugas->load(['pesertaMagang.keputusan.calon', 'pesertaMagang.pengguna']);
 
         return view('mentor.tugas.edit', compact('tugas'));
@@ -145,6 +163,8 @@ class TugasController extends Controller
     public function update(UbahTugasRequest $request, Tugas $tugas): RedirectResponse
     {
         $this->pastikanBimbingan($tugas->pesertaMagang);
+
+        abort_if($tugas->status === 'Selesai', 403, 'Tugas yang sudah selesai tidak dapat diubah lagi.');
 
         $progresSudahAda = $tugas->progresTugas()->count();
         $judulProgresList = array_values(array_filter($request->judul_progres, fn($j) => trim($j) !== ''));
@@ -176,6 +196,8 @@ class TugasController extends Controller
     {
         $this->pastikanBimbingan($tugas->pesertaMagang);
 
+        abort_if($tugas->status === 'Selesai', 403, 'Tugas yang sudah selesai tidak dapat dihapus.');
+
         DB::transaction(function () use ($tugas) {
             foreach ($tugas->progresTugas as $progres) {
                 if ($progres->path_berkas && \Illuminate\Support\Facades\Storage::disk('local')->exists($progres->path_berkas)) {
@@ -187,6 +209,34 @@ class TugasController extends Controller
         });
 
         return redirect()->route('mentor.tugas.index')->with('sukses', 'Tugas berhasil dihapus.');
+    }
+
+    /**
+     * Berikan Nilai Akhir Tugas — POST /mentor/tugas/{tugas}/nilai
+     */
+    public function nilai(Request $request, Tugas $tugas): RedirectResponse
+    {
+        $this->pastikanBimbingan($tugas->pesertaMagang);
+
+        abort_unless($tugas->status === 'Selesai', 403, 'Hanya tugas yang sudah selesai yang dapat dinilai.');
+
+        $request->validate([
+            'nilai' => 'required|integer|min:0|max:100',
+            'catatan_nilai' => 'nullable|string|max:500',
+        ], [
+            'nilai.required' => 'Nilai akhir tugas wajib diisi.',
+            'nilai.min'      => 'Nilai minimal 0.',
+            'nilai.max'      => 'Nilai maksimal 100.',
+        ]);
+
+        $tugas->update([
+            'nilai' => $request->nilai,
+            'catatan_nilai' => $request->catatan_nilai,
+        ]);
+
+        // TODO: notifikasi nilai tugas ke peserta ($tugas->pesertaMagang->id_pengguna)
+
+        return redirect()->route('mentor.tugas.show', $tugas)->with('sukses', 'Penilaian tugas berhasil disimpan.');
     }
 
     /**

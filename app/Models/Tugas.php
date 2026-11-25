@@ -26,6 +26,8 @@ class Tugas extends Model
         'jumlah_progres',
         'judul_progres',
         'status',
+        'nilai',
+        'catatan_nilai',
     ];
 
     protected function casts(): array
@@ -34,6 +36,7 @@ class Tugas extends Model
             'tenggat' => 'date',
             'jumlah_progres' => 'integer',
             'judul_progres' => 'array',
+            'nilai' => 'integer',
         ];
     }
 

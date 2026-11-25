@@ -31,16 +31,18 @@
             </div>
         </div>
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-            <a href="{{ route('mentor.tugas.edit', $tugas) }}" class="btn btn-garis btn-kecil">
-                <x-ikon nama="ubah" /> Ubah Tugas &amp; Progres
-            </a>
-            <form method="POST" action="{{ route('mentor.tugas.destroy', $tugas) }}" style="display:inline;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus tugas ini secara permanen?')">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-garis-bahaya btn-kecil" title="Hapus tugas ini">
-                    <x-ikon nama="silang" /> Hapus
-                </button>
-            </form>
+            @if ($tugas->status !== 'Selesai')
+                <a href="{{ route('mentor.tugas.edit', $tugas) }}" class="btn btn-garis btn-kecil">
+                    <x-ikon nama="ubah" /> Ubah Tugas &amp; Progres
+                </a>
+                <form method="POST" action="{{ route('mentor.tugas.destroy', $tugas) }}" style="display:inline;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus tugas ini secara permanen?')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-garis-bahaya btn-kecil" title="Hapus tugas ini">
+                        <x-ikon nama="silang" /> Hapus
+                    </button>
+                </form>
+            @endif
             <span class="chip">Progres ke-{{ $urutanAktif }} dari {{ $tugas->jumlah_progres }}</span>
             <span class="status {{ $kelasStatus }}">{{ $tugas->status }}</span>
         </div>
@@ -210,6 +212,53 @@
                 <button class="btn" type="submit"><x-ikon nama="centang-saja" /> Simpan Hasil Pemeriksaan</button>
             </div>
         </form>
+    </div>
+@endif
+
+@if ($tugas->status === 'Selesai')
+    <div class="kartu" style="border-left: 4px solid var(--sukses);">
+        <div class="kartu-kepala">
+            <div class="kartu-judul">
+                <span class="ikon-bulat hijau"><x-ikon nama="medali" /></span>
+                <div>
+                    <h2>Penilaian Akhir Tugas</h2>
+                    <p>{{ $tugas->nilai !== null ? 'Tugas ini telah dinilai oleh Anda sebagai mentor pembimbing.' : 'Semua progres telah diterima. Berikan nilai akhir dan catatan evaluasi kepada peserta.' }}</p>
+                </div>
+            </div>
+            @if ($tugas->nilai !== null)
+                <div>
+                    <span class="chip" style="font-size: 16px; font-weight: 700; background: rgba(34, 197, 94, 0.15); color: var(--sukses); padding: 6px 14px; border-radius: 999px;">
+                        Nilai: {{ $tugas->nilai }} / 100
+                    </span>
+                </div>
+            @endif
+        </div>
+
+        @if ($tugas->nilai !== null)
+            <div style="background: var(--permukaan-2); padding: 14px 18px; border-radius: var(--radius-kecil); border: 1px solid var(--garis); margin-top: 10px;">
+                <small class="redup" style="display: block; margin-bottom: 4px;">Catatan Penilaian:</small>
+                <p style="white-space: pre-line; margin: 0; font-weight: 600;">{{ $tugas->catatan_nilai ?: 'Tidak ada catatan tambahan.' }}</p>
+            </div>
+        @else
+            <form method="POST" action="{{ route('mentor.tugas.nilai', $tugas) }}">
+                @csrf
+                <div class="tata-form" style="grid-template-columns: 180px 1fr; gap: 16px; margin-top: 12px;">
+                    <label>Nilai (0 - 100) <span class="wajib">*</span>
+                        <input type="number" name="nilai" min="0" max="100" value="{{ old('nilai') }}" placeholder="Contoh: 90" required>
+                        @error('nilai')<span class="pesan-salah">{{ $message }}</span>@enderror
+                    </label>
+                    <label>Catatan / Feedback Penilaian (Opsional)
+                        <textarea name="catatan_nilai" rows="2" placeholder="Tuliskan apresiasi, masukan, atau evaluasi untuk peserta...">{{ old('catatan_nilai') }}</textarea>
+                        @error('catatan_nilai')<span class="pesan-salah">{{ $message }}</span>@enderror
+                    </label>
+                </div>
+                <div class="aksi" style="margin-top: 16px;">
+                    <button class="btn btn-kuning" type="submit">
+                        <x-ikon nama="centang-saja" /> Simpan Nilai Akhir
+                    </button>
+                </div>
+            </form>
+        @endif
     </div>
 @endif
 @endsection

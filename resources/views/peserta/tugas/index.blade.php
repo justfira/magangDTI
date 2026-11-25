@@ -93,6 +93,13 @@
                     </td>
                     <td>
                         <span class="status {{ $kelasStatus }}">{{ $tugas->status }}</span>
+                        @if ($tugas->status === 'Selesai' && $tugas->nilai !== null)
+                            <div style="margin-top: 4px;">
+                                <span class="chip" style="font-size: 11px; font-weight: 700; color: var(--sukses);">
+                                    <x-ikon nama="medali" style="width: 12px; height: 12px; vertical-align: -1px;" /> Nilai: {{ $tugas->nilai }}
+                                </span>
+                            </div>
+                        @endif
                     </td>
                     <td class="aksi-tabel">
                         <a class="btn btn-garis btn-kecil" href="{{ route('peserta.tugas.show', $tugas) }}">

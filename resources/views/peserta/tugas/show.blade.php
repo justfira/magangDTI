@@ -215,12 +215,29 @@
         </div>
     </div>
 @elseif ($tugas->status === 'Selesai')
-    <div class="alert alert-sukses" style="margin-bottom: 20px;">
-        <x-ikon nama="centang" />
-        <div>
-            <b>Tugas ini telah selesai!</b>
-            Seluruh target tahapan progres telah diselesaikan dan diterima dengan baik oleh mentor pembimbing.
+    <div class="kartu" style="border-left: 4px solid var(--sukses); margin-bottom: 20px;">
+        <div class="kartu-kepala">
+            <div class="kartu-judul">
+                <span class="ikon-bulat hijau"><x-ikon nama="medali" /></span>
+                <div>
+                    <h2>Tugas Ini Telah Selesai!</h2>
+                    <p>Seluruh target tahapan progres telah diselesaikan dan diterima dengan baik oleh mentor.</p>
+                </div>
+            </div>
+            @if ($tugas->nilai !== null)
+                <div>
+                    <span class="chip" style="font-size: 16px; font-weight: 700; background: rgba(34, 197, 94, 0.15); color: var(--sukses); padding: 6px 14px; border-radius: 999px;">
+                        Nilai: {{ $tugas->nilai }} / 100
+                    </span>
+                </div>
+            @endif
         </div>
+        @if ($tugas->catatan_nilai)
+            <div style="margin-top: 12px; background: var(--permukaan-2); padding: 12px 16px; border-radius: var(--radius-kecil); border: 1px solid var(--garis);">
+                <small class="redup" style="display: block; margin-bottom: 4px;">Catatan Penilaian Mentor:</small>
+                <b style="color: var(--teks);">{{ $tugas->catatan_nilai }}</b>
+            </div>
+        @endif
     </div>
 @endif
 @endsection

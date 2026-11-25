@@ -432,4 +432,151 @@ class KelolaTugasTest extends TestCase
 
         $this->assertDatabaseMissing('tugas', ['id_tugas' => $tugas->id_tugas]);
     }
+
+    public function test_tugas_selesai_tidak_dapat_diedit_atau_dihapus(): void
+    {
+        $tugas = Tugas::create([
+            'id_peserta_magang' => $this->pesertaMagang->id_peserta_magang,
+            'judul'             => 'Tugas Sudah Selesai',
+            'deskripsi'         => 'Sudah tuntas semua tahapan.',
+            'tenggat'           => now()->addDays(3)->toDateString(),
+            'jumlah_progres'    => 1,
+            'judul_progres'     => ['Tahap Final'],
+            'status'            => 'Selesai',
+        ]);
+
+        // Coba akses edit -> 403 Forbidden
+        $responseEdit = $this->actingAs($this->mentorUser)->get(route('mentor.tugas.edit', $tugas));
+        $responseEdit->assertStatus(403);
+
+        // Coba kirim update -> 403 Forbidden
+        $responseUpdate = $this->actingAs($this->mentorUser)->put(route('mentor.tugas.update', $tugas), [
+            'judul'         => 'Ganti Judul',
+            'deskripsi'     => 'Deskripsi baru',
+            'tenggat'       => now()->addDays(5)->toDateString(),
+            'judul_progres' => ['Tahap Final'],
+        ]);
+        $responseUpdate->assertStatus(403);
+
+        // Coba hapus -> 403 Forbidden
+        $responseDelete = $this->actingAs($this->mentorUser)->delete(route('mentor.tugas.destroy', $tugas));
+        $responseDelete->assertStatus(403);
+
+        $this->assertDatabaseHas('tugas', ['id_tugas' => $tugas->id_tugas]);
+    }
+
+    public function test_mentor_dapat_memberikan_nilai_pada_tugas_selesai(): void
+    {
+        $tugas = Tugas::create([
+            'id_peserta_magang' => $this->pesertaMagang->id_peserta_magang,
+            'judul'             => 'Tugas Selesai Siap Dinilai',
+            'deskripsi'         => 'Pengerjaan bagus.',
+            'tenggat'           => now()->addDays(3)->toDateString(),
+            'jumlah_progres'    => 1,
+            'judul_progres'     => ['Tahap Akhir'],
+            'status'            => 'Selesai',
+        ]);
+
+        $response = $this->actingAs($this->mentorUser)->post(route('mentor.tugas.nilai', $tugas), [
+            'nilai'         => 95,
+            'catatan_nilai' => 'Hasil pekerjaan sangat baik dan rapi.',
+        ]);
+
+        $response->assertRedirect(route('mentor.tugas.show', $tugas))
+            ->assertSessionHas('sukses', 'Penilaian tugas berhasil disimpan.');
+
+        $tugas->refresh();
+        $this->assertEquals(95, $tugas->nilai);
+        $this->assertEquals('Hasil pekerjaan sangat baik dan rapi.', $tugas->catatan_nilai);
+    }
+
+    public function test_mentor_tidak_dapat_memberikan_nilai_pada_tugas_belum_selesai(): void
+    {
+        $tugas = Tugas::create([
+            'id_peserta_magang' => $this->pesertaMagang->id_peserta_magang,
+            'judul'             => 'Tugas Masih Berjalan',
+            'deskripsi'         => 'Belum selesai.',
+            'tenggat'           => now()->addDays(3)->toDateString(),
+            'jumlah_progres'    => 1,
+            'judul_progres'     => ['Tahap 1'],
+            'status'            => 'Ditugaskan',
+        ]);
+
+        $response = $this->actingAs($this->mentorUser)->post(route('mentor.tugas.nilai', $tugas), [
+            'nilai'         => 80,
+            'catatan_nilai' => 'Belum boleh dinilai.',
+        ]);
+
+        $response->assertStatus(403);
+        $tugas->refresh();
+        $this->assertNull($tugas->nilai);
+    }
+
+    public function test_mentor_dapat_membuat_satu_tugas_untuk_banyak_peserta(): void
+    {
+        // Buat peserta kedua
+        $pesertaUser2 = $this->buatAkun('PESERTA', 'peserta2@dti.test', 'Dimas Pratama');
+
+        $pengajuan2 = Pengajuan::create([
+            'kode_pengajuan' => 'DTI-TEST-0002',
+            'jalur' => 'DTI',
+            'id_program' => ProgramMagang::first()->id_program,
+            'diajukan_oleh' => $pesertaUser2->id_pengguna,
+            'status_pengajuan' => 'Selesai Diputuskan',
+            'tanggal_pengajuan' => now()->subDays(15),
+        ]);
+
+        $calonPeserta2 = CalonPeserta::create([
+            'id_pengajuan' => $pengajuan2->id_pengajuan,
+            'nama_lengkap' => 'Dimas Pratama',
+            'email' => 'peserta2@dti.test',
+            'nomor_induk_pendidikan' => '2311521002',
+            'institusi_asal' => 'Universitas Andalas',
+            'jurusan_prodi' => 'Sistem Informasi',
+        ]);
+
+        $keputusan2 = KeputusanPenerimaan::create([
+            'id_calon' => $calonPeserta2->id_calon,
+            'id_kepala_seksi' => $this->mentorPegawai->id_pegawai,
+            'id_direktur' => $this->mentorPegawai->id_pegawai,
+            'rekomendasi' => 'Terima',
+            'keputusan' => 'Diterima',
+            'waktu_keputusan' => now()->subDays(10),
+        ]);
+
+        $pesertaMagang2 = PesertaMagang::create([
+            'id_keputusan'   => $keputusan2->id_keputusan,
+            'id_pengguna'    => $pesertaUser2->id_pengguna,
+            'id_mentor'      => $this->mentorPegawai->id_pegawai,
+            'tanggal_mulai'  => now()->subDays(5)->toDateString(),
+            'tanggal_selesai'=> now()->addDays(60)->toDateString(),
+            'status_magang'  => 'Aktif',
+        ]);
+
+        $payload = [
+            'id_peserta_magang' => [
+                $this->pesertaMagang->id_peserta_magang,
+                $pesertaMagang2->id_peserta_magang,
+            ],
+            'judul'             => 'Proyek Penugasan Bersama',
+            'deskripsi'         => 'Kerjakan modul ini.',
+            'tenggat'           => now()->addDays(7)->toDateString(),
+            'judul_progres'     => ['Desain UI', 'Implementasi CRUD'],
+        ];
+
+        $response = $this->actingAs($this->mentorUser)->post(route('mentor.tugas.store'), $payload);
+        $response->assertRedirect(route('mentor.tugas.index'))
+            ->assertSessionHas('sukses');
+
+        $this->assertDatabaseHas('tugas', [
+            'id_peserta_magang' => $this->pesertaMagang->id_peserta_magang,
+            'judul'             => 'Proyek Penugasan Bersama',
+            'jumlah_progres'    => 2,
+        ]);
+        $this->assertDatabaseHas('tugas', [
+            'id_peserta_magang' => $pesertaMagang2->id_peserta_magang,
+            'judul'             => 'Proyek Penugasan Bersama',
+            'jumlah_progres'    => 2,
+        ]);
+    }
 }
