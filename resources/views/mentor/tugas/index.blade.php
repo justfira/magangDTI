@@ -98,6 +98,9 @@
                         <span class="status {{ $kelasStatus }}">{{ $tugas->status }}</span>
                     </td>
                     <td class="aksi-tabel">
+                        <a class="btn btn-garis btn-kecil" href="{{ route('mentor.tugas.edit', $tugas) }}" title="Ubah tugas & tenggat">
+                            <x-ikon nama="ubah" /> Ubah
+                        </a>
                         <a class="btn btn-garis btn-kecil" href="{{ route('mentor.tugas.show', $tugas) }}">
                             <x-ikon nama="mata" /> Detail
                         </a>

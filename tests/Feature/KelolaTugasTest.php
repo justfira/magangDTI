@@ -375,4 +375,38 @@ class KelolaTugasTest extends TestCase
         $responseAsing = $this->actingAs($userAsing)->get(route('tugas.progres.berkas', $progres));
         $responseAsing->assertForbidden();
     }
+
+    public function test_mentor_dapat_melihat_halaman_edit_dan_memperbarui_tenggat_tugas(): void
+    {
+        $tugas = Tugas::create([
+            'id_peserta_magang' => $this->pesertaMagang->id_peserta_magang,
+            'judul'             => 'Tugas Lama',
+            'deskripsi'         => 'Deskripsi lama.',
+            'tenggat'           => now()->addDays(3)->toDateString(),
+            'jumlah_progres'    => 1,
+            'status'            => 'Ditugaskan',
+        ]);
+
+        // 1. Halaman edit dapat diakses mentor
+        $responseEdit = $this->actingAs($this->mentorUser)->get(route('mentor.tugas.edit', $tugas));
+        $responseEdit->assertOk()
+            ->assertSee('Ubah Tugas &amp; Tenggat Waktu', false)
+            ->assertSee('Tugas Lama');
+
+        // 2. Mentor memperbarui judul dan tenggat waktu
+        $tenggatBaru = now()->addDays(14)->toDateString();
+        $responseUpdate = $this->actingAs($this->mentorUser)->put(route('mentor.tugas.update', $tugas), [
+            'judul'     => 'Tugas Diperbarui',
+            'deskripsi' => 'Deskripsi baru setelah perpanjangan.',
+            'tenggat'   => $tenggatBaru,
+        ]);
+
+        $responseUpdate->assertRedirect(route('mentor.tugas.show', $tugas))
+            ->assertSessionHas('sukses', 'Data tugas dan tenggat waktu berhasil diperbarui.');
+
+        $tugas->refresh();
+        $this->assertEquals('Tugas Diperbarui', $tugas->judul);
+        $this->assertEquals('Deskripsi baru setelah perpanjangan.', $tugas->deskripsi);
+        $this->assertEquals($tenggatBaru, $tugas->tenggat->toDateString());
+    }
 }

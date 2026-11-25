@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Mentor;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Mentor\ReviewProgresRequest;
 use App\Http\Requests\Mentor\SimpanTugasRequest;
+use App\Http\Requests\Mentor\UbahTugasRequest;
 use App\Models\PesertaMagang;
 use App\Models\ProgresTugas;
 use App\Models\Tugas;
@@ -124,6 +125,34 @@ class TugasController extends Controller
         $bisaReview = ($tugas->status === 'Diserahkan' && $progresTerakhir && $progresTerakhir->hasil_review === null);
 
         return view('mentor.tugas.show', compact('tugas', 'progresTerakhir', 'bisaReview'));
+    }
+
+    /**
+     * Form Ubah Tugas — GET /mentor/tugas/{tugas}/edit
+     */
+    public function edit(Request $request, Tugas $tugas): View
+    {
+        $this->pastikanBimbingan($tugas->pesertaMagang);
+
+        $tugas->load(['pesertaMagang.keputusan.calon', 'pesertaMagang.pengguna']);
+
+        return view('mentor.tugas.edit', compact('tugas'));
+    }
+
+    /**
+     * Perbarui Tugas — PUT /mentor/tugas/{tugas}
+     */
+    public function update(UbahTugasRequest $request, Tugas $tugas): RedirectResponse
+    {
+        $this->pastikanBimbingan($tugas->pesertaMagang);
+
+        $tugas->update([
+            'judul'     => $request->judul,
+            'deskripsi' => $request->deskripsi,
+            'tenggat'   => $request->tenggat,
+        ]);
+
+        return redirect()->route('mentor.tugas.show', $tugas)->with('sukses', 'Data tugas dan tenggat waktu berhasil diperbarui.');
     }
 
     /**

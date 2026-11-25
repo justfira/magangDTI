@@ -30,7 +30,10 @@
                 <p>Penerima: <b>{{ $namaPeserta }}</b> ({{ $peserta?->calonPeserta()?->institusi_asal ?? 'DTI Unand' }})</p>
             </div>
         </div>
-        <div style="display: flex; gap: 8px; align-items: center;">
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <a href="{{ route('mentor.tugas.edit', $tugas) }}" class="btn btn-garis btn-kecil">
+                <x-ikon nama="ubah" /> Ubah Tugas &amp; Tenggat
+            </a>
             <span class="chip">Progres ke-{{ $urutanAktif }} dari {{ $tugas->jumlah_progres }}</span>
             <span class="status {{ $kelasStatus }}">{{ $tugas->status }}</span>
         </div>
