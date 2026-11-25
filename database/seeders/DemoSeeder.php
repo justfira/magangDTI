@@ -81,10 +81,29 @@ class DemoSeeder extends Seeder
             'tanggal_mulai' => now()->subDay()->toDateString(), 'tanggal_selesai' => now()->addMonths(3)->toDateString(),
             'status_magang' => 'Aktif',
         ]);
+        \Illuminate\Support\Facades\Storage::disk('local')->put(
+            'tugas-instruksi/instruksi_fitur_tambah_list.pdf',
+            'Dokumen petunjuk teknis dan modul pengerjaan fitur tambah dan list data peserta oleh mentor Budi Santoso.'
+        );
+        \Illuminate\Support\Facades\Storage::disk('local')->put(
+            'tugas-berkas/bukti_progres_dimas.zip',
+            'Berkas zip bukti hasil pengerjaan tahapan form tambah & list peserta magang oleh Dimas Pratama.'
+        );
+
         $tugas = $pm->tugas()->firstOrCreate(['judul' => 'Fitur tambah & list data'], [
-            'deskripsi' => 'Buat halaman tambah dan daftar data peserta.', 'tenggat' => now()->addDays(10)->toDateString(), 'status' => 'Diserahkan',
+            'deskripsi' => 'Buat halaman tambah dan daftar data peserta.',
+            'tenggat' => now()->addDays(10)->toDateString(),
+            'status' => 'Diserahkan',
+            'jumlah_progres' => 2,
+            'judul_progres' => ['Form tambah data', 'List data & filter'],
+            'path_dokumen' => 'tugas-instruksi/instruksi_fitur_tambah_list.pdf',
         ]);
-        $tugas->progresTugas()->firstOrCreate(['urutan' => 1], ['catatan_progres' => 'Form tambah & list selesai', 'waktu_kirim' => now()]);
+        $tugas->progresTugas()->firstOrCreate(['urutan' => 1], [
+            'catatan_progres' => 'Form tambah & list selesai, data sudah dapat diinput dan tampil di tabel.',
+            'tautan_hasil' => 'https://github.com/dimaspratama/magang-dti-fitur-data',
+            'path_berkas' => 'tugas-berkas/bukti_progres_dimas.zip',
+            'waktu_kirim' => now(),
+        ]);
 
         if ($peserta->notifikasi()->doesntExist()) {
             Notifikasi::kirim($peserta->id_pengguna, 'PENEMPATAN', 'Anda ditempatkan di seksi '.$seksi->nama_seksi.' dengan mentor Budi Santoso.', 'peserta_magang', $pm->id_peserta_magang);

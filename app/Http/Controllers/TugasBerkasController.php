@@ -30,4 +30,27 @@ class TugasBerkasController extends Controller
 
         return Storage::disk('local')->download($progres->path_berkas, $namaBerkasAsli);
     }
+
+    /**
+     * Unduh berkas dokumen instruksi tugas dari mentor dengan otorisasi (Mentor & Peserta).
+     */
+    public function unduhDokumenTugas(\App\Models\Tugas $tugas): StreamedResponse
+    {
+        $peserta = $tugas->pesertaMagang;
+        abort_unless($peserta, 404, 'Tugas tidak ditemukan.');
+
+        $pengguna = auth()->user();
+        $isMentor = $peserta->dibimbingOleh($pengguna?->pegawai);
+        $isPeserta = $peserta->id_pengguna === $pengguna?->id_pengguna;
+
+        abort_unless($isMentor || $isPeserta, 403, 'Akses ditolak.');
+
+        if (! $tugas->path_dokumen || ! Storage::disk('local')->exists($tugas->path_dokumen)) {
+            abort(404, 'Dokumen instruksi tidak ditemukan.');
+        }
+
+        $namaBerkasAsli = basename($tugas->path_dokumen);
+
+        return Storage::disk('local')->download($tugas->path_dokumen, $namaBerkasAsli);
+    }
 }

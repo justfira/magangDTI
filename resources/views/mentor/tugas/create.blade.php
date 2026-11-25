@@ -9,7 +9,7 @@
     </div>
 </div>
 
-<form class="kartu form form-kartu" method="POST" action="{{ route('mentor.tugas.store') }}">
+<form class="kartu form form-kartu" method="POST" action="{{ route('mentor.tugas.store') }}" enctype="multipart/form-data">
     @csrf
 
     {{-- 01. Peserta Bimbingan (Bisa Pilih Banyak / Multi-Select) --}}
@@ -78,6 +78,12 @@
             <label>Deskripsi Tugas <span class="teks-wajib" style="color:var(--gagal)">*</span>
                 <textarea name="deskripsi" rows="4" placeholder="Jelaskan instruksi, tujuan, dan kriteria tugas ini secara rinci..." required class="@error('deskripsi') salah @enderror">{{ old('deskripsi') }}</textarea>
                 @error('deskripsi')<span class="pesan-salah">{{ $message }}</span>@enderror
+            </label>
+
+            <label>Dokumen / Lampiran Instruksi Tugas (Opsional)
+                <input type="file" name="dokumen" accept=".pdf,.doc,.docx,.zip,.rar,.png,.jpg,.jpeg">
+                <small class="redup">Unggah modul panduan, lembar petunjuk, atau berkas pendukung instruksi (PDF, DOC, DOCX, ZIP, RAR, maks. 10 MB).</small>
+                @error('dokumen')<span class="pesan-salah">{{ $message }}</span>@enderror
             </label>
 
             {{-- Tahapan Progres --}}

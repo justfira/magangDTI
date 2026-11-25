@@ -97,7 +97,16 @@ class TugasController extends Controller
         $pesertaIds = (array) $request->id_peserta_magang;
         $daftarTugasBaru = [];
 
-        DB::transaction(function () use ($request, $pesertaIds, &$daftarTugasBaru) {
+        $pathDokumen = null;
+        if ($request->hasFile('dokumen')) {
+            $file = $request->file('dokumen');
+            $ekstensi = $file->getClientOriginalExtension();
+            $namaBersih = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $namaSimpan = time() . '_' . \Illuminate\Support\Str::slug($namaBersih) . '.' . $ekstensi;
+            $pathDokumen = $file->storeAs('tugas-instruksi', $namaSimpan, 'local');
+        }
+
+        DB::transaction(function () use ($request, $pesertaIds, $pathDokumen, &$daftarTugasBaru) {
             foreach ($pesertaIds as $idPeserta) {
                 $peserta = PesertaMagang::findOrFail($idPeserta);
                 $this->pastikanBimbingan($peserta);
@@ -110,6 +119,7 @@ class TugasController extends Controller
                     'tenggat'           => $request->tenggat,
                     'jumlah_progres'    => count($request->judul_progres),
                     'judul_progres'     => array_values($request->judul_progres),
+                    'path_dokumen'      => $pathDokumen,
                     'status'            => 'Ditugaskan',
                 ]);
 
@@ -178,12 +188,32 @@ class TugasController extends Controller
             return back()->withInput()->with('gagal', "Jumlah tahapan progres tidak boleh kurang dari {$progresSudahAda} karena peserta sudah menyerahkan {$progresSudahAda} progres.");
         }
 
+        $pathDokumen = $tugas->path_dokumen;
+        if ($request->hasFile('dokumen')) {
+            $file = $request->file('dokumen');
+            $ekstensi = $file->getClientOriginalExtension();
+            $namaBersih = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+            $namaSimpan = time() . '_' . \Illuminate\Support\Str::slug($namaBersih) . '.' . $ekstensi;
+            $pathBaru = $file->storeAs('tugas-instruksi', $namaSimpan, 'local');
+
+            if ($tugas->path_dokumen && \Illuminate\Support\Facades\Storage::disk('local')->exists($tugas->path_dokumen)) {
+                $dipakaiLain = Tugas::where('path_dokumen', $tugas->path_dokumen)
+                    ->where('id_tugas', '!=', $tugas->id_tugas)
+                    ->exists();
+                if (! $dipakaiLain) {
+                    \Illuminate\Support\Facades\Storage::disk('local')->delete($tugas->path_dokumen);
+                }
+            }
+            $pathDokumen = $pathBaru;
+        }
+
         $tugas->update([
             'judul'          => $request->judul,
             'deskripsi'      => $request->deskripsi,
             'tenggat'        => $request->tenggat,
             'jumlah_progres' => $jumlahBaru,
             'judul_progres'  => $judulProgresList,
+            'path_dokumen'   => $pathDokumen,
         ]);
 
         return redirect()->route('mentor.tugas.show', $tugas)->with('sukses', 'Data tugas, tenggat waktu, dan tahapan progres berhasil diperbarui.');

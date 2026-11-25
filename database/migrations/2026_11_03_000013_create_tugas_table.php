@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('status', 30)->default('Ditugaskan');
             $table->unsignedSmallInteger('nilai')->nullable()->comment('Nilai akhir tugas (0-100)');
             $table->text('catatan_nilai')->nullable()->comment('Catatan atau umpan balik penilaian akhir');
+            $table->string('path_dokumen', 255)->nullable()->comment('Path berkas lampiran instruksi dari mentor');
             $table->timestamp('created_at')->nullable();
             $table->foreign('id_peserta_magang')->references('id_peserta_magang')->on('peserta_magang')->restrictOnDelete();
         });

@@ -56,6 +56,21 @@
         <p style="white-space: pre-line; color: var(--teks);">{{ $tugas->deskripsi }}</p>
     </div>
 
+    @if ($tugas->path_dokumen)
+        <div style="margin-top: 14px; padding: 12px 16px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: var(--radius-kecil); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span class="ikon-bulat" style="background: #2563eb; color: #fff; width: 36px; height: 36px;"><x-ikon nama="berkas" /></span>
+                <div>
+                    <b style="font-size: 13.5px; display: block; color: var(--teks);">Dokumen Instruksi / Modul Pengerjaan dari Mentor</b>
+                    <small class="redup">{{ basename($tugas->path_dokumen) }} · Unduh sebagai panduan pengerjaan tugas</small>
+                </div>
+            </div>
+            <a href="{{ route('tugas.dokumen', $tugas) }}" class="btn btn-garis btn-kecil">
+                <x-ikon nama="berkas" /> Unduh Dokumen Instruksi
+            </a>
+        </div>
+    @endif
+
     @if ($tugas->judul_progres)
         <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--garis);">
             <h3 style="margin-bottom: 10px;">Tahapan Progres:</h3>
@@ -130,15 +145,15 @@
                     <div style="margin-top: 10px; background: var(--permukaan-2); border: 1px solid var(--garis); padding: 12px 16px; border-radius: var(--radius-kecil);">
                         <p style="white-space: pre-line; margin-bottom: 10px;">{{ $p->catatan_progres }}</p>
 
-                        <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; font-size: 13.5px;">
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; font-size: 13.5px; padding-top: 10px; border-top: 1px dashed var(--garis);">
+                            @if ($p->path_berkas)
+                                <a href="{{ route('tugas.progres.berkas', $p) }}" class="btn btn-garis btn-kecil">
+                                    <x-ikon nama="berkas" /> Unduh Berkas Bukti ({{ basename($p->path_berkas) }})
+                                </a>
+                            @endif
                             @if ($p->tautan_hasil)
                                 <a href="{{ $p->tautan_hasil }}" target="_blank" rel="noopener noreferrer" class="btn btn-garis btn-kecil">
                                     <x-ikon nama="panah-kanan" /> Tautan Hasil Pengerjaan
-                                </a>
-                            @endif
-                            @if ($p->path_berkas)
-                                <a href="{{ route('tugas.progres.berkas', $p) }}" class="btn btn-garis btn-kecil">
-                                    <x-ikon nama="berkas" /> Unduh Berkas Lampiran
                                 </a>
                             @endif
                         </div>

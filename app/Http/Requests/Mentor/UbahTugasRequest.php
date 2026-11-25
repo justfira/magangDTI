@@ -19,6 +19,7 @@ class UbahTugasRequest extends FormRequest
             'tenggat' => 'required|date',
             'judul_progres' => 'required|array|min:1',
             'judul_progres.*' => 'required|string|max:150',
+            'dokumen' => 'nullable|file|mimes:pdf,zip,rar,doc,docx,png,jpg,jpeg|max:10240',
         ];
     }
 
@@ -34,6 +35,9 @@ class UbahTugasRequest extends FormRequest
             'judul_progres.min' => 'Minimal harus ada 1 tahapan progres.',
             'judul_progres.*.required' => 'Judul tahapan progres tidak boleh kosong.',
             'judul_progres.*.max' => 'Judul tahapan progres maksimal 150 karakter.',
+            'dokumen.file' => 'Berkas instruksi harus berupa file yang valid.',
+            'dokumen.mimes' => 'Format berkas instruksi tidak didukung. Format yang diizinkan: pdf, zip, rar, doc, docx, png, jpg, jpeg.',
+            'dokumen.max' => 'Ukuran berkas instruksi maksimal 10 MB.',
         ];
     }
 }

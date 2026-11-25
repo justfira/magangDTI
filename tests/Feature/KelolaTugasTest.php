@@ -579,4 +579,40 @@ class KelolaTugasTest extends TestCase
             'jumlah_progres'    => 2,
         ]);
     }
+
+    public function test_mentor_dapat_membuat_tugas_dengan_lampiran_dokumen_instruksi(): void
+    {
+        Storage::fake('local');
+        $file = UploadedFile::fake()->create('panduan_tugas.pdf', 500, 'application/pdf');
+
+        $payload = [
+            'id_peserta_magang' => $this->pesertaMagang->id_peserta_magang,
+            'judul'             => 'Tugas Berkas Modul',
+            'deskripsi'         => 'Panduan terlampir.',
+            'tenggat'           => now()->addDays(7)->toDateString(),
+            'jumlah_progres'    => 1,
+            'judul_progres'     => ['Pengerjaan Modul'],
+            'dokumen'           => $file,
+        ];
+
+        $response = $this->actingAs($this->mentorUser)->post(route('mentor.tugas.store'), $payload);
+        $tugas = Tugas::where('judul', 'Tugas Berkas Modul')->first();
+
+        $this->assertNotNull($tugas);
+        $this->assertNotNull($tugas->path_dokumen);
+        Storage::disk('local')->assertExists($tugas->path_dokumen);
+
+        // Mentor dapat mengunduh dokumen instruksi
+        $responseMentor = $this->actingAs($this->mentorUser)->get(route('tugas.dokumen', $tugas));
+        $responseMentor->assertOk();
+
+        // Peserta dapat mengunduh dokumen instruksi
+        $responsePeserta = $this->actingAs($this->pesertaUser)->get(route('tugas.dokumen', $tugas));
+        $responsePeserta->assertOk();
+
+        // Pengguna lain ditolak 403
+        $userLain = $this->buatAkun('PESERTA', 'lain@dti.test', 'Pengguna Lain');
+        $responseLain = $this->actingAs($userLain)->get(route('tugas.dokumen', $tugas));
+        $responseLain->assertStatus(403);
+    }
 }

@@ -28,6 +28,7 @@ class Tugas extends Model
         'status',
         'nilai',
         'catatan_nilai',
+        'path_dokumen',
     ];
 
     protected function casts(): array

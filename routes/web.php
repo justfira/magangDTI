@@ -31,6 +31,7 @@ Route::middleware(['auth', 'akun.aktif'])->group(function () {
 
     // Berkas tugas berotentikasi (Mentor & Peserta) (UC-07)
     Route::get('/tugas/progres/{progres}/berkas', [Controllers\TugasBerkasController::class, 'unduh'])->name('tugas.progres.berkas');
+    Route::get('/tugas/{tugas}/dokumen', [Controllers\TugasBerkasController::class, 'unduhDokumenTugas'])->name('tugas.dokumen');
 
     // Berkas dokumen pengajuan pendaftaran berotentikasi (UC-03 / UC-05)
     Route::get('/pengajuan/dokumen/{dokumen}/unduh', [Controllers\Peserta\DokumenPengajuanController::class, 'unduh'])->name('pengajuan.dokumen.unduh');

@@ -27,7 +27,7 @@
     </div>
 @endif
 
-<form class="kartu form form-kartu" method="POST" action="{{ route('mentor.tugas.update', $tugas) }}">
+<form class="kartu form form-kartu" method="POST" action="{{ route('mentor.tugas.update', $tugas) }}" enctype="multipart/form-data">
     @csrf
     @method('PUT')
 
@@ -70,6 +70,20 @@
             <label>Deskripsi Tugas <span class="teks-wajib" style="color:var(--gagal)">*</span>
                 <textarea name="deskripsi" rows="4" placeholder="Jelaskan instruksi, tujuan, dan kriteria tugas ini secara rinci..." required class="@error('deskripsi') salah @enderror">{{ old('deskripsi', $tugas->deskripsi) }}</textarea>
                 @error('deskripsi')<span class="pesan-salah">{{ $message }}</span>@enderror
+            </label>
+
+            <label>Dokumen / Lampiran Instruksi Tugas (Opsional)
+                @if ($tugas->path_dokumen)
+                    <div style="margin-bottom: 8px; font-size: 13px; display: flex; align-items: center; gap: 8px;">
+                        <span class="chip" style="background: rgba(59, 130, 246, 0.1); color: #2563eb;">
+                            <x-ikon nama="berkas" /> Berkas saat ini: {{ basename($tugas->path_dokumen) }}
+                        </span>
+                        <a href="{{ route('tugas.dokumen', $tugas) }}" target="_blank" class="btn btn-garis btn-kecil">Unduh</a>
+                    </div>
+                @endif
+                <input type="file" name="dokumen" accept=".pdf,.doc,.docx,.zip,.rar,.png,.jpg,.jpeg">
+                <small class="redup">{{ $tugas->path_dokumen ? 'Pilih berkas baru jika ingin mengganti dokumen instruksi yang lama (Maks. 10 MB).' : 'Unggah modul panduan atau berkas instruksi pengerjaan jika ada (Maks. 10 MB).' }}</small>
+                @error('dokumen')<span class="pesan-salah">{{ $message }}</span>@enderror
             </label>
 
             {{-- 03. Tahapan Progres Dinamis --}}
