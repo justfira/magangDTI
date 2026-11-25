@@ -54,6 +54,7 @@ Route::middleware(['auth', 'akun.aktif'])->group(function () {
         Route::get('/superadmin/presensi/rekap/csv', [Controllers\Superadmin\KelolaPresensiController::class, 'eksporCsv'])->name('superadmin.presensi.csv');
         Route::get('/superadmin/presensi/{presensi}/koreksi', [Controllers\Superadmin\KelolaPresensiController::class, 'koreksi'])->name('superadmin.presensi.koreksi');
         Route::post('/superadmin/presensi/{presensi}/koreksi', [Controllers\Superadmin\KelolaPresensiController::class, 'simpanKoreksi'])->name('superadmin.presensi.koreksi.simpan');
+        Route::get('/superadmin/koreksi-presensi/{koreksi}/bukti', [Controllers\Superadmin\KelolaPresensiController::class, 'bukti'])->name('superadmin.presensi.bukti');
         Route::get('/superadmin/sertifikat', [Controllers\Superadmin\SertifikatController::class, 'index'])->name('superadmin.sertifikat.index');
         Route::post('/superadmin/sertifikat/{penyelesaian}/unggah', [Controllers\Superadmin\SertifikatController::class, 'unggah'])->name('superadmin.sertifikat.unggah');
     });
@@ -89,6 +90,7 @@ Route::middleware(['auth', 'akun.aktif'])->group(function () {
         Route::get('/mentor/verifikasi-kehadiran', [Controllers\Mentor\VerifikasiKehadiranController::class, 'index'])->name('mentor.kehadiran.index');
         Route::post('/mentor/verifikasi-kehadiran/{pengajuanKehadiran}/setujui', [Controllers\Mentor\VerifikasiKehadiranController::class, 'setujui'])->name('mentor.kehadiran.setujui');
         Route::post('/mentor/verifikasi-kehadiran/{pengajuanKehadiran}/tolak', [Controllers\Mentor\VerifikasiKehadiranController::class, 'tolak'])->name('mentor.kehadiran.tolak');
+        Route::get('/mentor/verifikasi-kehadiran/{pengajuanKehadiran}/lampiran', [Controllers\Mentor\VerifikasiKehadiranController::class, 'lampiran'])->name('mentor.kehadiran.lampiran');
         Route::get('/mentor/logbook', [Controllers\Mentor\PeriksaLogbookController::class, 'index'])->name('mentor.logbook.index');
         Route::post('/mentor/logbook/{logbook}/periksa', [Controllers\Mentor\PeriksaLogbookController::class, 'periksa'])->name('mentor.logbook.periksa');
         Route::get('/mentor/evaluasi', [Controllers\Mentor\EvaluasiController::class, 'index'])->name('mentor.evaluasi.index');
