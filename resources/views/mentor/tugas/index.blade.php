@@ -98,12 +98,19 @@
                         <span class="status {{ $kelasStatus }}">{{ $tugas->status }}</span>
                     </td>
                     <td class="aksi-tabel">
-                        <a class="btn btn-garis btn-kecil" href="{{ route('mentor.tugas.edit', $tugas) }}" title="Ubah tugas & tenggat">
-                            <x-ikon nama="ubah" /> Ubah
-                        </a>
-                        <a class="btn btn-garis btn-kecil" href="{{ route('mentor.tugas.show', $tugas) }}">
+                        <a class="btn btn-garis btn-kecil" href="{{ route('mentor.tugas.show', $tugas) }}" title="Lihat detail &amp; progres">
                             <x-ikon nama="mata" /> Detail
                         </a>
+                        <a class="btn btn-garis btn-kecil" href="{{ route('mentor.tugas.edit', $tugas) }}" title="Ubah tugas &amp; tahapan">
+                            <x-ikon nama="ubah" /> Ubah
+                        </a>
+                        <form method="POST" action="{{ route('mentor.tugas.destroy', $tugas) }}" style="display:inline;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus tugas ini?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-garis-bahaya btn-kecil" title="Hapus tugas">
+                                <x-ikon nama="silang" />
+                            </button>
+                        </form>
                     </td>
                 </tr>
             @empty

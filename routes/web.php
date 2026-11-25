@@ -93,6 +93,7 @@ Route::middleware(['auth', 'akun.aktif'])->group(function () {
         Route::get('/mentor/tugas/{tugas}', [Controllers\Mentor\TugasController::class, 'show'])->name('mentor.tugas.show');
         Route::get('/mentor/tugas/{tugas}/edit', [Controllers\Mentor\TugasController::class, 'edit'])->name('mentor.tugas.edit');
         Route::put('/mentor/tugas/{tugas}', [Controllers\Mentor\TugasController::class, 'update'])->name('mentor.tugas.update');
+        Route::delete('/mentor/tugas/{tugas}', [Controllers\Mentor\TugasController::class, 'destroy'])->name('mentor.tugas.destroy');
         Route::post('/mentor/progres/{progres}/review', [Controllers\Mentor\TugasController::class, 'review'])->name('mentor.progres.review');
         Route::get('/mentor/verifikasi-kehadiran', [Controllers\Mentor\VerifikasiKehadiranController::class, 'index'])->name('mentor.kehadiran.index');
         Route::post('/mentor/verifikasi-kehadiran/{pengajuanKehadiran}/setujui', [Controllers\Mentor\VerifikasiKehadiranController::class, 'setujui'])->name('mentor.kehadiran.setujui');

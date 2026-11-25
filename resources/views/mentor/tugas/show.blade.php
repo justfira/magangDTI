@@ -32,8 +32,15 @@
         </div>
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
             <a href="{{ route('mentor.tugas.edit', $tugas) }}" class="btn btn-garis btn-kecil">
-                <x-ikon nama="ubah" /> Ubah Tugas &amp; Tenggat
+                <x-ikon nama="ubah" /> Ubah Tugas &amp; Progres
             </a>
+            <form method="POST" action="{{ route('mentor.tugas.destroy', $tugas) }}" style="display:inline;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus tugas ini secara permanen?')">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-garis-bahaya btn-kecil" title="Hapus tugas ini">
+                    <x-ikon nama="silang" /> Hapus
+                </button>
+            </form>
             <span class="chip">Progres ke-{{ $urutanAktif }} dari {{ $tugas->jumlah_progres }}</span>
             <span class="status {{ $kelasStatus }}">{{ $tugas->status }}</span>
         </div>

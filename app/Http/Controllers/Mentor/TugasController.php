@@ -146,13 +146,47 @@ class TugasController extends Controller
     {
         $this->pastikanBimbingan($tugas->pesertaMagang);
 
+        $progresSudahAda = $tugas->progresTugas()->count();
+        $judulProgresList = array_values(array_filter($request->judul_progres, fn($j) => trim($j) !== ''));
+        $jumlahBaru = count($judulProgresList);
+
+        if ($jumlahBaru === 0) {
+            return back()->withInput()->with('gagal', 'Minimal harus ada 1 tahapan progres.');
+        }
+
+        if ($jumlahBaru < $progresSudahAda) {
+            return back()->withInput()->with('gagal', "Jumlah tahapan progres tidak boleh kurang dari {$progresSudahAda} karena peserta sudah menyerahkan {$progresSudahAda} progres.");
+        }
+
         $tugas->update([
-            'judul'     => $request->judul,
-            'deskripsi' => $request->deskripsi,
-            'tenggat'   => $request->tenggat,
+            'judul'          => $request->judul,
+            'deskripsi'      => $request->deskripsi,
+            'tenggat'        => $request->tenggat,
+            'jumlah_progres' => $jumlahBaru,
+            'judul_progres'  => $judulProgresList,
         ]);
 
-        return redirect()->route('mentor.tugas.show', $tugas)->with('sukses', 'Data tugas dan tenggat waktu berhasil diperbarui.');
+        return redirect()->route('mentor.tugas.show', $tugas)->with('sukses', 'Data tugas, tenggat waktu, dan tahapan progres berhasil diperbarui.');
+    }
+
+    /**
+     * Hapus Tugas — DELETE /mentor/tugas/{tugas}
+     */
+    public function destroy(Request $request, Tugas $tugas): RedirectResponse
+    {
+        $this->pastikanBimbingan($tugas->pesertaMagang);
+
+        DB::transaction(function () use ($tugas) {
+            foreach ($tugas->progresTugas as $progres) {
+                if ($progres->path_berkas && \Illuminate\Support\Facades\Storage::disk('local')->exists($progres->path_berkas)) {
+                    \Illuminate\Support\Facades\Storage::disk('local')->delete($progres->path_berkas);
+                }
+            }
+            $tugas->progresTugas()->delete();
+            $tugas->delete();
+        });
+
+        return redirect()->route('mentor.tugas.index')->with('sukses', 'Tugas berhasil dihapus.');
     }
 
     /**

@@ -17,6 +17,8 @@ class UbahTugasRequest extends FormRequest
             'judul' => 'required|string|max:180',
             'deskripsi' => 'required|string',
             'tenggat' => 'required|date',
+            'judul_progres' => 'required|array|min:1',
+            'judul_progres.*' => 'required|string|max:150',
         ];
     }
 
@@ -28,6 +30,10 @@ class UbahTugasRequest extends FormRequest
             'deskripsi.required' => 'Deskripsi tugas wajib diisi.',
             'tenggat.required' => 'Tenggat waktu tugas wajib diisi.',
             'tenggat.date' => 'Format tenggat waktu tidak valid.',
+            'judul_progres.required' => 'Minimal harus ada 1 tahapan progres.',
+            'judul_progres.min' => 'Minimal harus ada 1 tahapan progres.',
+            'judul_progres.*.required' => 'Judul tahapan progres tidak boleh kosong.',
+            'judul_progres.*.max' => 'Judul tahapan progres maksimal 150 karakter.',
         ];
     }
 }
