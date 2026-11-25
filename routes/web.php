@@ -110,6 +110,7 @@ Route::middleware(['auth', 'akun.aktif'])->group(function () {
         Route::post('/mentor/verifikasi-kehadiran/{pengajuanKehadiran}/tolak', [Controllers\Mentor\VerifikasiKehadiranController::class, 'tolak'])->name('mentor.kehadiran.tolak');
         Route::get('/mentor/verifikasi-kehadiran/{pengajuanKehadiran}/lampiran', [Controllers\Mentor\VerifikasiKehadiranController::class, 'lampiran'])->name('mentor.kehadiran.lampiran');
         Route::get('/mentor/logbook', [Controllers\Mentor\PeriksaLogbookController::class, 'index'])->name('mentor.logbook.index');
+        Route::get('/mentor/logbook/{logbook}', [Controllers\Mentor\PeriksaLogbookController::class, 'show'])->name('mentor.logbook.show');
         Route::post('/mentor/logbook/{logbook}/periksa', [Controllers\Mentor\PeriksaLogbookController::class, 'periksa'])->name('mentor.logbook.periksa');
         Route::get('/mentor/evaluasi', [Controllers\Mentor\EvaluasiController::class, 'index'])->name('mentor.evaluasi.index');
         Route::get('/mentor/evaluasi/{peserta}/edit', [Controllers\Mentor\EvaluasiController::class, 'edit'])->name('mentor.evaluasi.edit');
@@ -135,6 +136,7 @@ Route::middleware(['auth', 'akun.aktif'])->group(function () {
         Route::get('/peserta/logbook/create', [Controllers\Peserta\LogbookController::class, 'create'])->name('peserta.logbook.create');
         Route::post('/peserta/logbook', [Controllers\Peserta\LogbookController::class, 'store'])->name('peserta.logbook.store');
         Route::get('/peserta/logbook/{logbook}/edit', [Controllers\Peserta\LogbookController::class, 'edit'])->name('peserta.logbook.edit');
+        Route::get('/peserta/logbook/{logbook}', [Controllers\Peserta\LogbookController::class, 'show'])->name('peserta.logbook.show');
         Route::put('/peserta/logbook/{logbook}', [Controllers\Peserta\LogbookController::class, 'update'])->name('peserta.logbook.update');
         Route::get('/peserta/sertifikat', [Controllers\Peserta\SertifikatController::class, 'index'])->name('peserta.sertifikat.index');
         Route::get('/peserta/sertifikat/{penyelesaian}/unduh', [Controllers\Peserta\SertifikatController::class, 'unduh'])->name('peserta.sertifikat.unduh');
