@@ -13,8 +13,13 @@ return new class extends Migration
             $table->unsignedInteger('id_peserta_magang')->comment('menerima');
             $table->string('judul', 180);
             $table->text('deskripsi')->nullable();
-            $table->date('tenggat');
+            $table->dateTime('tenggat');
+            $table->unsignedTinyInteger('jumlah_progres')->default(1)->comment('Jumlah target progres yang ditentukan mentor saat membuat tugas');
+            $table->json('judul_progres')->nullable()->comment('Daftar judul untuk tiap tahapan progres dalam format JSON');
             $table->string('status', 30)->default('Ditugaskan');
+            $table->unsignedSmallInteger('nilai')->nullable()->comment('Nilai akhir tugas (0-100)');
+            $table->text('catatan_nilai')->nullable()->comment('Catatan atau umpan balik penilaian akhir');
+            $table->string('path_dokumen', 255)->nullable()->comment('Path berkas lampiran instruksi dari mentor');
             $table->timestamp('created_at')->nullable();
             $table->foreign('id_peserta_magang')->references('id_peserta_magang')->on('peserta_magang')->restrictOnDelete();
         });
