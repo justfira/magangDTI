@@ -22,7 +22,7 @@ use Throwable;
 class StatusPendaftaranController extends Controller
 {
     /**
-     * Status Pendaftaran — GET /peserta/pendaftaran
+     * Status Pendaftaran — GET /peserta/pendaftaran   (UC-03 / UC-05)
      */
     public function index(Request $request): View
     {
@@ -32,11 +32,15 @@ class StatusPendaftaranController extends Controller
                 'program.syaratDokumenProgram' => fn ($q) => $q->orderBy('urutan'),
                 'dokumenPengajuan.syarat',
                 'calonPeserta.keputusanPenerimaan',
+                'pemeriksa.pengguna',
             ])
             ->orderByDesc('tanggal_pengajuan')
             ->get();
 
-        return view('peserta.pendaftaran.index', compact('daftarPengajuan'));
+        return view('peserta.pendaftaran.index', [
+            'daftarPengajuan' => $daftarPengajuan,
+            'pengajuan' => $daftarPengajuan,
+        ]);
     }
 
     /**

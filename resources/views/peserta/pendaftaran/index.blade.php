@@ -1,12 +1,18 @@
+@use('App\Services\AlurPenerimaanService', 'Alur')
 @extends('layouts.app')
 
 @section('judul', 'Status Pendaftaran')
 
+@push('css')
+    <link rel="stylesheet" href="{{ asset('css/penerimaan.css') }}">
+@endpush
+
 @section('konten')
 <div class="kepala-halaman">
     <div>
+        <p class="kicker">Pendaftaran</p>
         <h1>Status Pendaftaran Rekrutmen</h1>
-        <p class="sub-judul">Pantau status seleksi dan riwayat berkas pendaftaran magang Anda di Direktorat Teknologi Informasi.</p>
+        <p class="sub-judul">Pantau pemeriksaan berkas, alur persetujuan, dan hasil penerimaan magang Anda di Direktorat Teknologi Informasi.</p>
     </div>
 </div>
 
@@ -15,7 +21,7 @@
         <span class="ikon-bulat" style="width: 56px; height: 56px; margin: 0 auto 16px;">
             <x-ikon nama="berkas" />
         </span>
-        <h2>Belum Ada Pendaftaran</h2>
+        <h2>{{ Alur::PESAN_KOSONG }}</h2>
         <p class="redup" style="max-width: 460px; margin: 8px auto 20px;">
             Anda belum memiliki pengajuan pendaftaran rekrutmen magang. Silakan lihat program magang yang sedang dibuka untuk mendaftar.
         </p>
@@ -27,12 +33,9 @@
     @foreach ($daftarPengajuan as $pengajuan)
         @php
             $calon = $pengajuan->calonPeserta->first();
-            $statusClass = match ($pengajuan->status_pengajuan) {
-                'Diajukan' => 'status-info',
-                'Perlu Perbaikan' => 'status-peringatan',
-                'Lengkap', 'Selesai Diputuskan' => 'status-sukses',
-                default => 'status-netral',
-            };
+            $keputusan = $calon?->keputusanPenerimaan;
+            $tidakSesuai = $pengajuan->dokumenPengajuan->where('hasil_pemeriksaan', 'Tidak Sesuai');
+            $statusClass = Alur::kelasStatus($pengajuan->status_pengajuan);
         @endphp
 
         <div class="kartu" style="margin-bottom: 24px;">
@@ -52,19 +55,60 @@
                 </div>
             </div>
 
-            {{-- Alert Perlu Perbaikan --}}
-            @if ($pengajuan->status_pengajuan === 'Perlu Perbaikan')
+            {{-- Status Keputusan / Hasil Verifikasi (Vania + Shafa) --}}
+            @if ($keputusan?->keputusan === 'Diterima')
+                <div class="pn-hasil diterima" style="margin: 16px 0 20px;">
+                    <x-ikon nama="medali" />
+                    <div>
+                        <b>Selamat, Anda diterima!</b>
+                        <p>Informasi penempatan seksi dan mentor akan muncul setelah ditetapkan Kepala Seksi.</p>
+                    </div>
+                </div>
+            @elseif ($keputusan?->keputusan === 'Ditolak')
+                <div class="pn-hasil ditolak" style="margin: 16px 0 20px;">
+                    <x-ikon nama="info" />
+                    <div>
+                        <b>Mohon maaf, pengajuan Anda belum dapat diterima.</b>
+                        @if ($keputusan->catatan_keputusan)
+                            <p>{{ $keputusan->catatan_keputusan }}</p>
+                        @endif
+                    </div>
+                </div>
+            @elseif ($pengajuan->status_pengajuan === 'Perlu Perbaikan')
                 <div class="alert alert-gagal" style="margin: 16px 0 20px;">
                     <x-ikon nama="peringatan" />
                     <div style="flex: 1;">
                         <b style="font-size: 15px;">Catatan Perbaikan dari Superadmin:</b>
-                        <p style="margin: 6px 0 12px; white-space: pre-line;">{{ $pengajuan->catatan_perbaikan }}</p>
+                        <p style="margin: 6px 0 8px; white-space: pre-line;">{{ $pengajuan->catatan_perbaikan }}</p>
+                        @if ($tidakSesuai->isNotEmpty())
+                            <ul style="margin: 0 0 12px 18px; padding: 0;">
+                                @foreach ($tidakSesuai as $d)
+                                    <li><b>{{ $d->syarat?->nama_syarat ?? Alur::labelJenisDokumen($d->jenis_dokumen) }}</b>{{ $d->catatan_pemeriksaan ? ': ' . $d->catatan_pemeriksaan : '' }}</li>
+                                @endforeach
+                            </ul>
+                        @endif
                         <a href="{{ route('peserta.pendaftaran.edit', $pengajuan) }}" class="btn btn-kuning btn-kecil">
-                            <x-ikon nama="ubah" /> Perbaiki Data &amp; Dokumen
+                            <x-ikon nama="ubah" /> Perbaiki Pengajuan
                         </a>
                     </div>
                 </div>
+            @else
+                <div class="pn-hasil proses" style="margin: 16px 0 20px;">
+                    <x-ikon nama="jam" />
+                    <div>
+                        <b>Pengajuan sedang diproses</b>
+                        <p>Kami akan memberi tahu Anda lewat notifikasi setiap ada perubahan status.</p>
+                    </div>
+                </div>
             @endif
+
+            {{-- Alur Persetujuan (Modul A/F Vania) --}}
+            <div style="padding: 16px; border: 1px solid var(--garis); border-radius: 12px; margin-bottom: 20px;">
+                <h3 style="margin: 0 0 12px; font-size: 14.5px; display: flex; align-items: center; gap: 8px;">
+                    <x-ikon nama="jam" /> Alur Persetujuan
+                </h3>
+                @include('penerimaan._alur', ['langkah' => Alur::langkahAlur($pengajuan)])
+            </div>
 
             {{-- Ringkasan Data Diri --}}
             <div style="padding: 16px; background: var(--permukaan-2); border-radius: 12px; margin-bottom: 20px;">
