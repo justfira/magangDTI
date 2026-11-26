@@ -36,6 +36,16 @@ class ProgramMagang extends Model
         ];
     }
 
+    public function isBuka(): bool
+    {
+        if ($this->status_publikasi !== 'Dipublikasikan') {
+            return false;
+        }
+
+        $today = today();
+        return $this->tanggal_buka <= $today && $this->tanggal_tutup >= $today;
+    }
+
     public function dibuatOleh(): BelongsTo
     {
         return $this->belongsTo(Pegawai::class, 'dibuat_oleh', 'id_pegawai');

@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * Tabel `tugas` — Tugas perorangan dari mentor peserta (UC-07).
@@ -24,13 +23,21 @@ class Tugas extends Model
         'judul',
         'deskripsi',
         'tenggat',
+        'jumlah_progres',
+        'judul_progres',
         'status',
+        'nilai',
+        'catatan_nilai',
+        'path_dokumen',
     ];
 
     protected function casts(): array
     {
         return [
-            'tenggat' => 'date'
+            'tenggat' => 'datetime',
+            'jumlah_progres' => 'integer',
+            'judul_progres' => 'array',
+            'nilai' => 'integer',
         ];
     }
 
@@ -41,6 +48,40 @@ class Tugas extends Model
 
     public function progresTugas(): HasMany
     {
-        return $this->hasMany(ProgresTugas::class, 'id_tugas', 'id_tugas');
+        return $this->hasMany(ProgresTugas::class, 'id_tugas', 'id_tugas')->orderBy('urutan', 'asc');
+    }
+
+    public function progresTerakhir(): ?ProgresTugas
+    {
+        if ($this->relationLoaded('progresTugas')) {
+            return $this->progresTugas->sortByDesc('urutan')->first();
+        }
+
+        return $this->progresTugas()->reorder('urutan', 'desc')->first();
+    }
+
+    public function urutanProgresTerakhir(): int
+    {
+        return (int) ($this->progresTugas()->max('urutan') ?? 0);
+    }
+
+    public function urutanProgresBerikutnya(): int
+    {
+        return $this->urutanProgresTerakhir() + 1;
+    }
+
+    public function apakahBolehKirimProgres(): bool
+    {
+        return in_array($this->status, ['Ditugaskan', 'Perlu Perbaikan'], true);
+    }
+
+    /**
+     * Kembalikan judul progres untuk urutan tertentu.
+     * Jika tidak ada (mis. progres tambahan karena perbaikan), hasilkan label otomatis.
+     */
+    public function judulProgresKe(int $urutan): string
+    {
+        $daftar = $this->judul_progres ?? [];
+        return !empty($daftar[$urutan - 1]) ? $daftar[$urutan - 1] : "Progres ke-{$urutan}";
     }
 }

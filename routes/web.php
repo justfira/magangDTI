@@ -41,6 +41,13 @@ Route::middleware(['auth', 'akun.aktif'])->group(function () {
     Route::post('/notifikasi/baca-semua', [Controllers\NotifikasiController::class, 'bacaSemua'])->name('notifikasi.baca-semua');
     Route::post('/notifikasi/{notifikasi}/baca', [Controllers\NotifikasiController::class, 'baca'])->name('notifikasi.baca');
 
+    // Berkas tugas berotentikasi (Mentor & Peserta) (UC-07)
+    Route::get('/tugas/progres/{progres}/berkas', [Controllers\TugasBerkasController::class, 'unduh'])->name('tugas.progres.berkas');
+    Route::get('/tugas/{tugas}/dokumen', [Controllers\TugasBerkasController::class, 'unduhDokumenTugas'])->name('tugas.dokumen');
+
+    // Berkas dokumen pengajuan pendaftaran berotentikasi (UC-03 / UC-05)
+    Route::get('/pengajuan/dokumen/{dokumen}/unduh', [Controllers\Peserta\DokumenPengajuanController::class, 'unduh'])->name('pengajuan.dokumen.unduh');
+
     // ===== UC-05: tautan "Lihat" dokumen persyaratan (Superadmin, Kepala Seksi, Direktur)
     Route::get('/pengajuan/dokumen/{dokumen}', [Controllers\DokumenPengajuanController::class, 'show'])
         ->middleware('peran:SUPERADMIN,KEPALA_SEKSI,DIREKTUR')->whereNumber('dokumen')->name('pengajuan.dokumen');
@@ -104,6 +111,10 @@ Route::middleware(['auth', 'akun.aktif'])->group(function () {
         Route::get('/mentor/tugas/create', [Controllers\Mentor\TugasController::class, 'create'])->name('mentor.tugas.create');
         Route::post('/mentor/tugas', [Controllers\Mentor\TugasController::class, 'store'])->name('mentor.tugas.store');
         Route::get('/mentor/tugas/{tugas}', [Controllers\Mentor\TugasController::class, 'show'])->name('mentor.tugas.show');
+        Route::get('/mentor/tugas/{tugas}/edit', [Controllers\Mentor\TugasController::class, 'edit'])->name('mentor.tugas.edit');
+        Route::put('/mentor/tugas/{tugas}', [Controllers\Mentor\TugasController::class, 'update'])->name('mentor.tugas.update');
+        Route::delete('/mentor/tugas/{tugas}', [Controllers\Mentor\TugasController::class, 'destroy'])->name('mentor.tugas.destroy');
+        Route::post('/mentor/tugas/{tugas}/nilai', [Controllers\Mentor\TugasController::class, 'nilai'])->name('mentor.tugas.nilai');
         Route::post('/mentor/progres/{progres}/review', [Controllers\Mentor\TugasController::class, 'review'])->name('mentor.progres.review');
         Route::get('/mentor/verifikasi-kehadiran', [Controllers\Mentor\VerifikasiKehadiranController::class, 'index'])->name('mentor.kehadiran.index');
         Route::post('/mentor/verifikasi-kehadiran/{pengajuanKehadiran}/setujui', [Controllers\Mentor\VerifikasiKehadiranController::class, 'setujui'])->name('mentor.kehadiran.setujui');
@@ -119,6 +130,7 @@ Route::middleware(['auth', 'akun.aktif'])->group(function () {
     // ===== Calon / Peserta Magang
     Route::middleware('peran:PESERTA')->group(function () {
         Route::get('/peserta/pendaftaran', [Controllers\Peserta\StatusPendaftaranController::class, 'index'])->name('peserta.pendaftaran.index');
+        Route::get('/peserta/pendaftaran/{pengajuan}/cetak', [Controllers\Peserta\StatusPendaftaranController::class, 'cetak'])->name('peserta.pendaftaran.cetak');
         Route::get('/peserta/pendaftaran/{pengajuan}/perbaikan', [Controllers\Peserta\StatusPendaftaranController::class, 'edit'])->name('peserta.pendaftaran.edit');
         Route::put('/peserta/pendaftaran/{pengajuan}/perbaikan', [Controllers\Peserta\StatusPendaftaranController::class, 'update'])->name('peserta.pendaftaran.update');
         Route::get('/peserta/penempatan', [Controllers\Peserta\PenempatanController::class, 'show'])->name('peserta.penempatan');
